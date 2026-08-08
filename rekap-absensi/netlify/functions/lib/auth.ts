@@ -11,8 +11,11 @@ export interface SesiPengguna {
   peran: Peran;
 }
 
+declare const Netlify: { env: { get(key: string): string | undefined } } | undefined;
+
 function secret(): string {
-  const s = process.env.JWT_SECRET;
+  const dariNetlify = typeof Netlify !== "undefined" ? Netlify.env.get("JWT_SECRET") : undefined;
+  const s = dariNetlify ?? process.env.JWT_SECRET;
   if (!s) throw new Error("JWT_SECRET belum diset di environment variables Netlify.");
   return s;
 }
