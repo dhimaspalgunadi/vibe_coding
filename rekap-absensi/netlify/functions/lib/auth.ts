@@ -11,6 +11,9 @@ export interface SesiPengguna {
   peran: Peran;
 }
 
+// JWT_SECRET sempat tidak ter-inject ke runtime karena diset dengan flag
+// "secret" di Netlify -- env var secret dikecualikan dari listing/propagasi
+// tertentu. Sekarang diset ulang tanpa flag secret.
 declare const Netlify: { env: { get(key: string): string | undefined } } | undefined;
 
 function secret(): string {
