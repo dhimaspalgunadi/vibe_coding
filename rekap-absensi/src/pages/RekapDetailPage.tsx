@@ -1,0 +1,200 @@
+import { useEffect, useState, type FormEvent } from "react";
+import { useParams } from "react-router-dom";
+import { api } from "../api";
+import type { RekapDetailResult } from "../types";
+
+function formatJam(menit: number): string {
+  const tanda = menit < 0 ? "-" : "";
+  const abs = Math.abs(menit);
+  const jam = Math.floor(abs / 60);
+  const sisa = abs % 60;
+  return `${tanda}${String(jam).padStart(2, "0")}:${String(sisa).padStart(2, "0")}`;
+}
+
+const FIELD_LABEL: Record<string, string> = {
+  total_hari: "Total Hari",
+  total_jam_menit: "Total Jam (menit)",
+  total_telat_menit: "Total Telat (menit)",
+  total_plg_cepat_menit: "Total Pulang Cepat (menit)",
+  total_lembur_menit: "Total Lembur (menit)",
+  status_anomali: "Status Anomali",
+};
+
+export default function RekapDetailPage() {
+  const { id } = useParams();
+  const [data, setData] = useState<RekapDetailResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [field, setField] = useState("total_telat_menit");
+  const [nilaiBaru, setNilaiBaru] = useState("");
+  const [alasan, setAlasan] = useState("");
+  const [menyimpan, setMenyimpan] = useState(false);
+
+  function muat() {
+    if (!id) return;
+    setLoading(true);
+    api
+      .rekapDetail(Number(id))
+      .then(setData)
+      .catch((e) => setErrorMsg(e instanceof Error ? e.message : "Gagal memuat data."))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(muat, [id]);
+
+  async function simpanPerubahan(e: FormEvent) {
+    e.preventDefault();
+    if (!id || !alasan.trim() || nilaiBaru === "") return;
+    setMenyimpan(true);
+    setErrorMsg(null);
+    try {
+      await api.rekapUpdate(Number(id), field, field === "status_anomali" ? nilaiBaru : Number(nilaiBaru), alasan.trim());
+      setNilaiBaru("");
+      setAlasan("");
+      muat();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Gagal menyimpan perubahan.");
+    } finally {
+      setMenyimpan(false);
+    }
+  }
+
+  if (loading) return <p>Memuat...</p>;
+  if (errorMsg && !data) return <p className="pesan-error">{errorMsg}</p>;
+  if (!data) return null;
+
+  const { rekap, harian, audit } = data;
+
+  return (
+    <div>
+      <h2>{rekap.nama}</h2>
+      <p className="teks-muted mono">
+        {rekap.nip} &middot; {rekap.cabang} &middot; {rekap.jenjang}
+      </p>
+      <p className="teks-muted">
+        Periode {rekap.tgl_mulai} s/d {rekap.tgl_selesai} &middot; sumber: {rekap.nama_file_asal}
+      </p>
+
+      <div className="baris-kpi">
+        <div className="kartu kpi">
+          <span className="kpi-nilai">{rekap.total_hari}</span>
+          <span className="kpi-label">Hari</span>
+        </div>
+        <div className="kartu kpi">
+          <span className="kpi-nilai mono">{formatJam(rekap.total_telat_menit)}</span>
+          <span className="kpi-label">Telat</span>
+        </div>
+        <div className="kartu kpi">
+          <span className="kpi-nilai mono">{formatJam(rekap.total_plg_cepat_menit)}</span>
+          <span className="kpi-label">Pulang Cepat</span>
+        </div>
+        <div className="kartu kpi">
+          <span className="kpi-nilai mono">{formatJam(rekap.total_lembur_menit)}</span>
+          <span className="kpi-label">Lembur</span>
+        </div>
+      </div>
+
+      {!rekap.validasi_cocok && (
+        <div className="kartu peringatan">
+          <strong>Selisih validasi.</strong> Jumlah harian tidak sama persis dengan total dari mesin absensi.
+          <pre className="mono kecil">{rekap.validasi_catatan}</pre>
+        </div>
+      )}
+      {rekap.status_anomali === "perlu_tinjau" && (
+        <div className="kartu peringatan">
+          <strong>Perlu ditinjau.</strong> {rekap.anomali_catatan}
+        </div>
+      )}
+
+      <h3>Rincian Harian</h3>
+      <div className="pembungkus-tabel">
+        <table className="tabel tabel-kecil">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Hari</th>
+              <th>Jam Kerja</th>
+              <th>Masuk</th>
+              <th>Pulang</th>
+              <th>Telat</th>
+              <th>Pulang Cepat</th>
+              <th>Lembur</th>
+              <th>Ket.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {harian.map((h) => (
+              <tr key={h.id} className={h.libur ? "baris-libur" : ""}>
+                <td className="mono">{h.tanggal}</td>
+                <td>{h.hari}</td>
+                <td>{h.jam_kerja ?? "-"}</td>
+                <td className="mono">{h.masuk_aktual ?? "-"}</td>
+                <td className="mono">{h.pulang_aktual ?? "-"}</td>
+                <td className="mono">{formatJam(h.telat_menit)}</td>
+                <td className="mono">{formatJam(h.plg_cepat_menit)}</td>
+                <td className="mono">{formatJam(h.lembur_menit)}</td>
+                <td>{h.ket_abs_raw ? <span title={h.ket_abs_kategori ?? undefined}>{h.ket_abs_raw}</span> : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Koreksi Manual</h3>
+      <form className="kartu formulir-edit" onSubmit={simpanPerubahan}>
+        <label>
+          Field
+          <select value={field} onChange={(e) => setField(e.target.value)}>
+            {Object.entries(FIELD_LABEL).map(([k, v]) => (
+              <option value={k} key={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Nilai Baru
+          {field === "status_anomali" ? (
+            <select value={nilaiBaru} onChange={(e) => setNilaiBaru(e.target.value)} required>
+              <option value="">Pilih...</option>
+              <option value="normal">normal</option>
+              <option value="perlu_tinjau">perlu_tinjau</option>
+            </select>
+          ) : (
+            <input type="number" value={nilaiBaru} onChange={(e) => setNilaiBaru(e.target.value)} required />
+          )}
+        </label>
+        <label className="lebar-penuh">
+          Alasan Perubahan (wajib)
+          <input
+            value={alasan}
+            onChange={(e) => setAlasan(e.target.value)}
+            placeholder="mis. koreksi setelah cek fisik dengan pegawai"
+            required
+          />
+        </label>
+        {errorMsg && <p className="pesan-error lebar-penuh">{errorMsg}</p>}
+        <button type="submit" className="tombol tombol-primer" disabled={menyimpan}>
+          {menyimpan ? "Menyimpan..." : "Simpan Perubahan"}
+        </button>
+      </form>
+
+      <h3>Riwayat Perubahan</h3>
+      {audit.length === 0 ? (
+        <p className="teks-muted">Belum ada perubahan pada rekap ini.</p>
+      ) : (
+        <ul className="daftar-audit">
+          {audit.map((a) => (
+            <li key={a.id}>
+              <span className="mono kecil">{new Date(a.waktu).toLocaleString("id-ID")}</span> &middot;{" "}
+              <strong>{a.admin_nama}</strong> mengubah <span className="mono">{a.field_diubah}</span> dari{" "}
+              <span className="mono">{a.nilai_lama}</span> ke <span className="mono">{a.nilai_baru}</span>.
+              <div className="teks-muted kecil">Alasan: {a.alasan}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
