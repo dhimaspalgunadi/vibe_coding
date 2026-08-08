@@ -2,7 +2,7 @@ import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { buatToken, cocokkanPassword, type Peran } from "./lib/auth.js";
 import { setCookieHeader } from "./lib/cookies.js";
-import { json } from "./lib/respond.js";
+import { amankan, json } from "./lib/respond.js";
 
 interface BarisPengguna {
   id: number;
@@ -12,7 +12,7 @@ interface BarisPengguna {
   peran: Peran;
 }
 
-export default async (req: Request) => {
+export default amankan(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Metode tidak didukung." }, 405);
 
   const body = await req.json().catch(() => null);
@@ -31,6 +31,6 @@ export default async (req: Request) => {
 
   const token = buatToken({ id: row.id, nama: row.nama, email: row.email, peran: row.peran });
   return json({ nama: row.nama, peran: row.peran }, 200, { "set-cookie": setCookieHeader(token) });
-};
+});
 
 export const config: Config = { path: "/api/auth/login" };

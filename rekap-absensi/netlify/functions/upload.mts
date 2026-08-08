@@ -1,7 +1,7 @@
 import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
-import { json } from "./lib/respond.js";
+import { amankan, json } from "./lib/respond.js";
 import { parseWorkbook, validasiDanAnomali } from "./lib/parser.js";
 
 interface KategoriRow {
@@ -26,7 +26,7 @@ function konversiTanggal(ddmmyyyy: string | null): string | null {
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
 }
 
-export default async (req: Request) => {
+export default amankan(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Metode tidak didukung." }, 405);
   const sesi = wajibLogin(req, ["admin"]);
   if ("error" in sesi) return sesi.error;
@@ -165,6 +165,6 @@ export default async (req: Request) => {
     validasiSelisih: pegawaiList.length - validasiCocok,
     perluTinjau,
   });
-};
+});
 
 export const config: Config = { path: "/api/upload" };

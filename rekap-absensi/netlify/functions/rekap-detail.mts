@@ -1,9 +1,9 @@
 import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
-import { json } from "./lib/respond.js";
+import { amankan, json } from "./lib/respond.js";
 
-export default async (req: Request) => {
+export default amankan(async (req: Request) => {
   const sesi = wajibLogin(req, ["admin"]);
   if ("error" in sesi) return sesi.error;
 
@@ -96,6 +96,6 @@ export default async (req: Request) => {
   }
 
   return json({ error: "Metode tidak didukung." }, 405);
-};
+});
 
 export const config: Config = { path: "/api/rekap-detail" };

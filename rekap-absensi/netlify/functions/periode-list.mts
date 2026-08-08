@@ -1,9 +1,9 @@
 import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
-import { json } from "./lib/respond.js";
+import { amankan, json } from "./lib/respond.js";
 
-export default async (req: Request) => {
+export default amankan(async (req: Request) => {
   const sesi = wajibLogin(req);
   if ("error" in sesi) return sesi.error;
   const rows = await db().sql`
@@ -14,6 +14,6 @@ export default async (req: Request) => {
     ORDER BY pu.tgl_mulai DESC, uk.cabang, uk.jenjang
   `;
   return json({ periode: rows });
-};
+});
 
 export const config: Config = { path: "/api/periode" };

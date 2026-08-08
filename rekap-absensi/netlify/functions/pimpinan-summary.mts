@@ -1,13 +1,13 @@
 import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
-import { json } from "./lib/respond.js";
+import { amankan, json } from "./lib/respond.js";
 
 // Pimpinan memilih rentang tanggal (bukan satu periode_upload), karena tiap
 // cabang/jenjang diunggah sebagai file terpisah dengan periode_upload sendiri
 // meski tanggalnya sama. Agregasi lintas cabang harus menggabungkan semua
 // unit yang berbagi rentang tanggal yang sama, bukan satu unit saja.
-export default async (req: Request) => {
+export default amankan(async (req: Request) => {
   const sesi = wajibLogin(req, ["admin", "pimpinan"]);
   if ("error" in sesi) return sesi.error;
 
@@ -60,6 +60,6 @@ export default async (req: Request) => {
   `;
 
   return json({ total: totalRows[0] ?? null, perCabang, perUnit });
-};
+});
 
 export const config: Config = { path: "/api/pimpinan-summary" };
