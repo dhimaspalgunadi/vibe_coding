@@ -260,6 +260,8 @@ export default function LaporanYayasanDetailPage() {
               <th>Unit</th>
               <th>Nama</th>
               <th>Jabatan</th>
+              <th>Agama</th>
+              <th>Tgl Masuk</th>
               <th>Kupon Awal</th>
               <th>Kupon Akhir</th>
               <th>Total Kerja</th>
@@ -275,8 +277,6 @@ export default function LaporanYayasanDetailPage() {
               <th>Plg Cepat (hr)</th>
               <th>Plg Cepat (mnt)</th>
               <th>Insentif</th>
-              <th>Agama</th>
-              <th>Tgl Masuk</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -289,6 +289,8 @@ export default function LaporanYayasanDetailPage() {
                   <td>{b.unit ?? "-"}</td>
                   <td>{b.nama}</td>
                   <td>{b.jabatan ?? "-"}</td>
+                  <td>{b.agama ?? "-"}</td>
+                  <td className="mono">{b.tanggal_masuk ? tglSaja(b.tanggal_masuk) : "-"}</td>
                   <td className="mono">{b.kupon_periode1}</td>
                   <td className="mono">{b.kupon_periode2}</td>
                   <td className="mono">{b.total_kerja_hari}</td>
@@ -304,8 +306,6 @@ export default function LaporanYayasanDetailPage() {
                   <td className="mono">{b.plg_cepat_hari || "-"}</td>
                   <td className="mono">{b.plg_cepat_menit || "-"}</td>
                   <td className="mono">{formatRupiah(b.insentif)}</td>
-                  <td>{b.agama ?? "-"}</td>
-                  <td className="mono">{b.tanggal_masuk ? tglSaja(b.tanggal_masuk) : "-"}</td>
                   <td>
                     <button type="button" className="tombol" onClick={() => (editBarisId === b.id ? setEditBarisId(null) : mulaiKoreksi(b))}>
                       {editBarisId === b.id ? "Batal" : "Koreksi"}
@@ -338,6 +338,13 @@ export default function LaporanYayasanDetailPage() {
                         </label>
                         <label>
                           Jabatan <input value={editNilai.jabatan ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, jabatan: e.target.value }))} />
+                        </label>
+                        <label>
+                          Agama <input value={editNilai.agama ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, agama: e.target.value }))} />
+                        </label>
+                        <label>
+                          Tanggal Masuk
+                          <input type="date" value={editNilai.tanggal_masuk ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, tanggal_masuk: e.target.value }))} />
                         </label>
                         <label>
                           Kupon Awal Periode
@@ -416,13 +423,6 @@ export default function LaporanYayasanDetailPage() {
                         <label>
                           Insentif Kehadiran (Rp)
                           <input type="number" value={editNilai.insentif ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, insentif: e.target.value }))} />
-                        </label>
-                        <label>
-                          Agama <input value={editNilai.agama ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, agama: e.target.value }))} />
-                        </label>
-                        <label>
-                          Tanggal Masuk
-                          <input type="date" value={editNilai.tanggal_masuk ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, tanggal_masuk: e.target.value }))} />
                         </label>
                         <label className="lebar-penuh">
                           Catatan (mis. info mutasi) <input value={editNilai.catatan ?? ""} onChange={(e) => setEditNilai((s) => ({ ...s, catatan: e.target.value }))} />
