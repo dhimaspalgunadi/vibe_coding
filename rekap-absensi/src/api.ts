@@ -1,5 +1,6 @@
 import type {
   AuditRow,
+  HarianUpdateResult,
   Periode,
   PeriodeRingkasan,
   PimpinanSummary,
@@ -51,6 +52,11 @@ export const api = {
       body: JSON.stringify({ field, nilaiBaru, alasan }),
     }),
   auditLog: () => req<{ log: AuditRow[] }>("/api/audit-log"),
+  harianUpdate: (id: number, masukAktual: string | null, pulangAktual: string | null, alasan: string) =>
+    req<HarianUpdateResult>(`/api/harian-update?id=${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ masukAktual, pulangAktual, alasan }),
+    }),
   periodeRingkasan: () => req<{ periode: PeriodeRingkasan[] }>("/api/periode-ringkasan"),
   pimpinanSummary: (tglMulai: string, tglSelesai: string) =>
     req<PimpinanSummary>(`/api/pimpinan-summary?tglMulai=${tglMulai}&tglSelesai=${tglSelesai}`),

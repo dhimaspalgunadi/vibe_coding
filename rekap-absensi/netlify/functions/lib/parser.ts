@@ -63,7 +63,7 @@ function cell(row: unknown[], i: number): string {
   return String(v).trim();
 }
 
-function durasiKeMenit(s: string): number {
+export function durasiKeMenit(s: string): number {
   const m = RE_DURASI.exec(s.trim());
   if (!m) return 0;
   return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);

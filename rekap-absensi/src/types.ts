@@ -67,6 +67,13 @@ export interface AuditRow {
   admin_nama: string;
   pegawai_nama?: string;
   nip?: string;
+  tanggal_terkait?: string | null;
+}
+
+export interface HarianUpdateResult {
+  ok: boolean;
+  harian: { telat: number; plgCepat: number; lembur: number; totalJam: number; masukAktual: string | null; pulangAktual: string | null };
+  rekapBulanan: { total_telat: number; total_plg_cepat: number; total_lembur: number; total_jam: number };
 }
 
 export interface RekapDetailResult {

@@ -34,9 +34,11 @@ export default amankan(async (req: Request) => {
     `;
 
     const audit = await database.sql`
-      SELECT a.id, a.field_diubah, a.nilai_lama, a.nilai_baru, a.alasan, a.waktu, pg.nama AS admin_nama
+      SELECT a.id, a.field_diubah, a.nilai_lama, a.nilai_baru, a.alasan, a.waktu, pg.nama AS admin_nama,
+             dh2.tanggal AS tanggal_terkait
       FROM audit_log a
       JOIN pengguna pg ON pg.id = a.pengguna_id
+      LEFT JOIN detail_harian dh2 ON dh2.id = a.detail_harian_id
       WHERE a.rekap_id = ${id}
       ORDER BY a.waktu DESC
     `;

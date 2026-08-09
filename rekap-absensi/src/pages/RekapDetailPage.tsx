@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
 import type { RekapDetailResult } from "../types";
@@ -30,6 +30,41 @@ export default function RekapDetailPage() {
   const [nilaiBaru, setNilaiBaru] = useState("");
   const [alasan, setAlasan] = useState("");
   const [menyimpan, setMenyimpan] = useState(false);
+
+  const [editHarianId, setEditHarianId] = useState<number | null>(null);
+  const [editMasuk, setEditMasuk] = useState("");
+  const [editPulang, setEditPulang] = useState("");
+  const [editAlasan, setEditAlasan] = useState("");
+  const [menyimpanHarian, setMenyimpanHarian] = useState(false);
+  const [errorHarian, setErrorHarian] = useState<string | null>(null);
+
+  function mulaiKoreksi(h: RekapDetailResult["harian"][number]) {
+    setEditHarianId(h.id);
+    setEditMasuk(h.masuk_aktual ?? "");
+    setEditPulang(h.pulang_aktual ?? "");
+    setEditAlasan("");
+    setErrorHarian(null);
+  }
+
+  function batalKoreksi() {
+    setEditHarianId(null);
+  }
+
+  async function simpanKoreksiHarian(e: FormEvent) {
+    e.preventDefault();
+    if (!editHarianId || !editAlasan.trim()) return;
+    setMenyimpanHarian(true);
+    setErrorHarian(null);
+    try {
+      await api.harianUpdate(editHarianId, editMasuk || null, editPulang || null, editAlasan.trim());
+      setEditHarianId(null);
+      muat();
+    } catch (err) {
+      setErrorHarian(err instanceof Error ? err.message : "Gagal menyimpan koreksi.");
+    } finally {
+      setMenyimpanHarian(false);
+    }
+  }
 
   function muat() {
     if (!id) return;
@@ -108,6 +143,10 @@ export default function RekapDetailPage() {
       )}
 
       <h3>Rincian Harian</h3>
+      <p className="teks-muted">
+        Klik <strong>Koreksi</strong> pada baris yang perlu diperbaiki. Telat/pulang cepat/lembur hari itu
+        dan total bulanan akan dihitung ulang otomatis, dan tercatat di Riwayat Perubahan.
+      </p>
       <div className="pembungkus-tabel">
         <table className="tabel tabel-kecil">
           <thead>
@@ -121,21 +160,65 @@ export default function RekapDetailPage() {
               <th>Pulang Cepat</th>
               <th>Lembur</th>
               <th>Ket.</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {harian.map((h) => (
-              <tr key={h.id} className={h.libur ? "baris-libur" : ""}>
-                <td className="mono">{h.tanggal}</td>
-                <td>{h.hari}</td>
-                <td>{h.jam_kerja ?? "-"}</td>
-                <td className="mono">{h.masuk_aktual ?? "-"}</td>
-                <td className="mono">{h.pulang_aktual ?? "-"}</td>
-                <td className="mono">{formatJam(h.telat_menit)}</td>
-                <td className="mono">{formatJam(h.plg_cepat_menit)}</td>
-                <td className="mono">{formatJam(h.lembur_menit)}</td>
-                <td>{h.ket_abs_raw ? <span title={h.ket_abs_kategori ?? undefined}>{h.ket_abs_raw}</span> : ""}</td>
-              </tr>
+              <Fragment key={h.id}>
+                <tr className={h.libur ? "baris-libur" : ""}>
+                  <td className="mono">{h.tanggal}</td>
+                  <td>{h.hari}</td>
+                  <td>{h.jam_kerja ?? "-"}</td>
+                  <td className="mono">{h.masuk_aktual ?? "-"}</td>
+                  <td className="mono">{h.pulang_aktual ?? "-"}</td>
+                  <td className="mono">{formatJam(h.telat_menit)}</td>
+                  <td className="mono">{formatJam(h.plg_cepat_menit)}</td>
+                  <td className="mono">{formatJam(h.lembur_menit)}</td>
+                  <td>{h.ket_abs_raw ? <span title={h.ket_abs_kategori ?? undefined}>{h.ket_abs_raw}</span> : ""}</td>
+                  <td>
+                    {editHarianId === h.id ? (
+                      <button type="button" className="tombol" onClick={batalKoreksi}>
+                        Batal
+                      </button>
+                    ) : (
+                      <button type="button" className="tombol" onClick={() => mulaiKoreksi(h)}>
+                        Koreksi
+                      </button>
+                    )}
+                  </td>
+                </tr>
+                {editHarianId === h.id && (
+                  <tr>
+                    <td colSpan={10}>
+                      <form className="baris-koreksi" onSubmit={simpanKoreksiHarian}>
+                        <label>
+                          Jam Masuk
+                          <input type="time" value={editMasuk} onChange={(e) => setEditMasuk(e.target.value)} />
+                        </label>
+                        <label>
+                          Jam Pulang
+                          <input type="time" value={editPulang} onChange={(e) => setEditPulang(e.target.value)} />
+                        </label>
+                        <label className="lebar-penuh">
+                          Alasan koreksi (wajib)
+                          <input
+                            value={editAlasan}
+                            onChange={(e) => setEditAlasan(e.target.value)}
+                            placeholder="mis. koreksi setelah cek CCTV / konfirmasi pegawai"
+                            required
+                            autoFocus
+                          />
+                        </label>
+                        {errorHarian && <p className="pesan-error lebar-penuh">{errorHarian}</p>}
+                        <button type="submit" className="tombol tombol-primer" disabled={menyimpanHarian}>
+                          {menyimpanHarian ? "Menyimpan..." : "Simpan Koreksi"}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -188,8 +271,14 @@ export default function RekapDetailPage() {
           {audit.map((a) => (
             <li key={a.id}>
               <span className="mono kecil">{new Date(a.waktu).toLocaleString("id-ID")}</span> &middot;{" "}
-              <strong>{a.admin_nama}</strong> mengubah <span className="mono">{a.field_diubah}</span> dari{" "}
-              <span className="mono">{a.nilai_lama}</span> ke <span className="mono">{a.nilai_baru}</span>.
+              <strong>{a.admin_nama}</strong> mengubah <span className="mono">{a.field_diubah}</span>
+              {a.tanggal_terkait && (
+                <>
+                  {" "}
+                  (tanggal <span className="mono">{a.tanggal_terkait}</span>)
+                </>
+              )}{" "}
+              dari <span className="mono">{a.nilai_lama}</span> ke <span className="mono">{a.nilai_baru}</span>.
               <div className="teks-muted kecil">Alasan: {a.alasan}</div>
             </li>
           ))}

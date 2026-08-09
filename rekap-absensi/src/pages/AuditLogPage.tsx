@@ -27,6 +27,7 @@ export default function AuditLogPage() {
                 <th>Waktu</th>
                 <th>Admin</th>
                 <th>Pegawai</th>
+                <th>Tanggal Terkait</th>
                 <th>Field</th>
                 <th>Lama</th>
                 <th>Baru</th>
@@ -41,6 +42,7 @@ export default function AuditLogPage() {
                   <td>
                     {r.pegawai_nama ?? "-"} <span className="teks-muted mono kecil">{r.nip}</span>
                   </td>
+                  <td className="mono">{r.tanggal_terkait ?? "-"}</td>
                   <td className="mono">{r.field_diubah}</td>
                   <td className="mono">{r.nilai_lama}</td>
                   <td className="mono">{r.nilai_baru}</td>
@@ -49,7 +51,7 @@ export default function AuditLogPage() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="teks-muted">
+                  <td colSpan={8} className="teks-muted">
                     Belum ada perubahan tercatat.
                   </td>
                 </tr>
