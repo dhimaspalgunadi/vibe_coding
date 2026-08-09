@@ -13,6 +13,19 @@ export interface UnitKerja {
   jam_kerja_acuan: string | null;
 }
 
+export interface PegawaiRow {
+  id: number;
+  nip: string;
+  nama: string;
+  unit_kerja_id: number;
+  cabang: string;
+  jenjang: string;
+  jabatan: string | null;
+  agama: string | null;
+  tanggal_masuk: string | null;
+  status_aktif: boolean;
+}
+
 export interface Periode {
   id: number;
   cabang: string;

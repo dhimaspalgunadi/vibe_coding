@@ -6,6 +6,7 @@ import type {
   LaporanYayasanGenerateResult,
   LaporanYayasanHeader,
   LaporanYayasanRingkas,
+  PegawaiRow,
   Periode,
   PeriodeRingkasan,
   PimpinanSummary,
@@ -95,4 +96,24 @@ export const api = {
       body: JSON.stringify({ alasan }),
     }),
   laporanYayasanExportUrl: (id: number) => `/api/laporan-yayasan-export?id=${id}`,
+
+  pegawaiList: (q?: string) => req<{ pegawai: PegawaiRow[] }>(`/api/pegawai${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  pegawaiTambah: (data: {
+    nip: string;
+    nama: string;
+    unit_kerja_id: number;
+    jabatan?: string;
+    agama?: string;
+    tanggal_masuk?: string;
+  }) => req<{ pegawai: PegawaiRow }>("/api/pegawai-detail", { method: "POST", body: JSON.stringify(data) }),
+  pegawaiUpdate: (id: number, perubahan: Record<string, unknown>, alasan: string) =>
+    req<{ ok: boolean; pegawai: PegawaiRow }>(`/api/pegawai-detail?id=${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ ...perubahan, alasan }),
+    }),
+  pegawaiHapus: (id: number, alasan: string) =>
+    req<{ ok: boolean }>(`/api/pegawai-detail?id=${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ alasan }),
+    }),
 };

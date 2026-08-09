@@ -23,6 +23,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/unggah" className={({ isActive }) => (isActive ? "aktif" : "")}>
             Unggah File
           </NavLink>
+          <NavLink to="/admin/pegawai" className={({ isActive }) => (isActive ? "aktif" : "")}>
+            Data Pegawai
+          </NavLink>
           <NavLink to="/admin/laporan-yayasan" className={({ isActive }) => (isActive ? "aktif" : "")}>
             Laporan ke Yayasan
           </NavLink>
