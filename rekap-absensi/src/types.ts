@@ -125,3 +125,72 @@ export interface PimpinanSummary {
   perCabang: RingkasanCabang[];
   perUnit: RingkasanUnit[];
 }
+
+export interface LaporanYayasanRingkas {
+  id: number;
+  judul: string;
+  cabang: string;
+  tgl_mulai: string;
+  tgl_selesai: string;
+  jumlah_baris: number;
+  diperbarui_pada: string;
+}
+
+export interface LaporanYayasanHeader {
+  id: number;
+  judul: string;
+  cabang: string;
+  tgl_mulai: string;
+  tgl_selesai: string;
+  keterangan_periode: string | null;
+  total_hari_kerja: number | null;
+  mengetahui_nama: string | null;
+  mengetahui_jabatan: string | null;
+  dibuat_oleh_nama: string | null;
+  dibuat_oleh_jabatan: string | null;
+}
+
+export interface LaporanYayasanBaris {
+  id: number;
+  laporan_id: number;
+  pegawai_id: number | null;
+  urutan: number;
+  nim: string | null;
+  unit: string | null;
+  nama: string;
+  jabatan: string | null;
+  kupon_periode1: number;
+  kupon_periode2: number;
+  total_kerja_hari: number;
+  sakit_hari: number;
+  izin_hari: number;
+  izin_ket: string | null;
+  alpa_hari: number;
+  cuti_hari: number;
+  cuti_ket: string | null;
+  lembur_menit: number;
+  lembur_ket: string | null;
+  telat_hari: number;
+  telat_menit: number;
+  telat_ket: string | null;
+  izin_telat_hari: number;
+  izin_telat_menit: number;
+  izin_telat_ket: string | null;
+  plg_cepat_hari: number;
+  plg_cepat_menit: number;
+  plg_cepat_ket: string | null;
+  insentif: number;
+  agama: string | null;
+  tanggal_masuk: string | null;
+  catatan: string | null;
+}
+
+export interface LaporanYayasanDetailResult {
+  laporan: LaporanYayasanHeader;
+  baris: LaporanYayasanBaris[];
+  audit: AuditRow[];
+}
+
+export interface LaporanYayasanGenerateResult extends LaporanYayasanDetailResult {
+  ditambahkan: number;
+}

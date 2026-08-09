@@ -9,6 +9,8 @@ import RekapListPage from "./pages/RekapListPage";
 import RekapDetailPage from "./pages/RekapDetailPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import PimpinanPage from "./pages/PimpinanPage";
+import LaporanYayasanListPage from "./pages/LaporanYayasanListPage";
+import LaporanYayasanDetailPage from "./pages/LaporanYayasanDetailPage";
 
 function Gerbang({ children, peranDiizinkan }: { children: ReactElement; peranDiizinkan: Peran[] }) {
   const { sesi, memuat } = useAuth();
@@ -45,6 +47,8 @@ export default function App() {
             <Route index element={<RekapListPage />} />
             <Route path="unggah" element={<UploadPage />} />
             <Route path="rekap/:id" element={<RekapDetailPage />} />
+            <Route path="laporan-yayasan" element={<LaporanYayasanListPage />} />
+            <Route path="laporan-yayasan/:id" element={<LaporanYayasanDetailPage />} />
             <Route path="log" element={<AuditLogPage />} />
           </Route>
           <Route

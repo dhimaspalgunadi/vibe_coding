@@ -1,6 +1,11 @@
 import type {
   AuditRow,
   HarianUpdateResult,
+  LaporanYayasanBaris,
+  LaporanYayasanDetailResult,
+  LaporanYayasanGenerateResult,
+  LaporanYayasanHeader,
+  LaporanYayasanRingkas,
   Periode,
   PeriodeRingkasan,
   PimpinanSummary,
@@ -60,4 +65,34 @@ export const api = {
   periodeRingkasan: () => req<{ periode: PeriodeRingkasan[] }>("/api/periode-ringkasan"),
   pimpinanSummary: (tglMulai: string, tglSelesai: string) =>
     req<PimpinanSummary>(`/api/pimpinan-summary?tglMulai=${tglMulai}&tglSelesai=${tglSelesai}`),
+
+  laporanYayasanList: () => req<{ laporan: LaporanYayasanRingkas[] }>("/api/laporan-yayasan"),
+  laporanYayasanGenerate: (tglMulai: string, tglSelesai: string, cabang: string) =>
+    req<LaporanYayasanGenerateResult>("/api/laporan-yayasan-generate", {
+      method: "POST",
+      body: JSON.stringify({ tglMulai, tglSelesai, cabang }),
+    }),
+  laporanYayasanDetail: (id: number) => req<LaporanYayasanDetailResult>(`/api/laporan-yayasan-detail?id=${id}`),
+  laporanYayasanUpdateHeader: (id: number, field: string, nilaiBaru: string | number | null) =>
+    req<{ laporan: LaporanYayasanHeader }>(`/api/laporan-yayasan-detail?id=${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ field, nilaiBaru }),
+    }),
+  laporanYayasanHapus: (id: number) => req<{ ok: boolean }>(`/api/laporan-yayasan-detail?id=${id}`, { method: "DELETE" }),
+  laporanYayasanTambahBaris: (laporanId: number, data: { nim?: string; unit?: string; nama: string; jabatan?: string }) =>
+    req<{ baris: LaporanYayasanBaris }>("/api/laporan-yayasan-baris", {
+      method: "POST",
+      body: JSON.stringify({ laporanId, ...data }),
+    }),
+  laporanYayasanUpdateBaris: (id: number, perubahan: Record<string, unknown>, alasan: string) =>
+    req<{ ok: boolean; baris: LaporanYayasanBaris }>(`/api/laporan-yayasan-baris?id=${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ ...perubahan, alasan }),
+    }),
+  laporanYayasanHapusBaris: (id: number, alasan: string) =>
+    req<{ ok: boolean }>(`/api/laporan-yayasan-baris?id=${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ alasan }),
+    }),
+  laporanYayasanExportUrl: (id: number) => `/api/laporan-yayasan-export?id=${id}`,
 };
