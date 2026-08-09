@@ -307,6 +307,7 @@ export default function LaporanYayasanDetailPage() {
               <th>Kupon Awal</th>
               <th>Kupon Akhir</th>
               <th>Total Kerja</th>
+              <th>Insentif</th>
               <th>Sakit</th>
               <th>Izin</th>
               <th>Alpa</th>
@@ -318,7 +319,6 @@ export default function LaporanYayasanDetailPage() {
               <th>Izin Tlt (mnt)</th>
               <th>Plg Cepat (hr)</th>
               <th>Plg Cepat (mnt)</th>
-              <th>Insentif</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -336,6 +336,7 @@ export default function LaporanYayasanDetailPage() {
                   <td className="mono">{b.kupon_periode1}</td>
                   <td className="mono">{b.kupon_periode2}</td>
                   <td className="mono">{b.total_kerja_hari}</td>
+                  <td className="mono">{formatRupiah(b.insentif)}</td>
                   <td className="mono">{b.sakit_hari || "-"}</td>
                   <td className="mono">{b.izin_hari || "-"}</td>
                   <td className="mono">{b.alpa_hari || "-"}</td>
@@ -347,7 +348,6 @@ export default function LaporanYayasanDetailPage() {
                   <td className="mono">{b.izin_telat_menit || "-"}</td>
                   <td className="mono">{b.plg_cepat_hari || "-"}</td>
                   <td className="mono">{b.plg_cepat_menit || "-"}</td>
-                  <td className="mono">{formatRupiah(b.insentif)}</td>
                   <td>
                     <button type="button" className="tombol" onClick={() => (editBarisId === b.id ? setEditBarisId(null) : mulaiKoreksi(b))}>
                       {editBarisId === b.id ? "Batal" : "Koreksi"}

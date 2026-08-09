@@ -29,6 +29,12 @@ export default amankan(async (req: Request) => {
     const laporan = laporanRows[0];
     if (!laporan) return json({ error: "Laporan tidak ditemukan." }, 404);
 
+    // Disinkronkan ulang tiap kali laporan dibuka, bukan cuma saat Simpan/
+    // Sinkronkan diklik -- supaya insentif otomatis Guru selalu mengikuti
+    // Total Hari Kerja & Total Kerja terkini tanpa Admin perlu menebak-nebak
+    // urutan tombol mana yang harus diklik dulu.
+    await sinkronkanInsentifGuru(database, id);
+
     const baris = await database.sql`
       SELECT * FROM laporan_yayasan_baris WHERE laporan_id = ${id} ORDER BY urutan, nama
     `;
