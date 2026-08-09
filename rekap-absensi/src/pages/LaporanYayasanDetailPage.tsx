@@ -51,7 +51,6 @@ const FIELD_TEKS: (keyof LaporanYayasanBaris)[] = [
 const HEADER_FIELD_LABEL: Record<string, string> = {
   judul: "Judul Laporan",
   keterangan_periode: "Keterangan Periode",
-  total_hari_kerja: "Total Hari Kerja Kependidikan",
   mengetahui_nama: "Nama (Mengetahui)",
   mengetahui_jabatan: "Jabatan (Mengetahui)",
   dibuat_oleh_nama: "Nama (Dibuat oleh)",
@@ -81,17 +80,39 @@ export default function LaporanYayasanDetailPage() {
   const [headerNilai, setHeaderNilai] = useState("");
   const [headerMenyimpan, setHeaderMenyimpan] = useState(false);
 
+  const [totalHariKerja, setTotalHariKerja] = useState("");
+  const [menyimpanTotalHariKerja, setMenyimpanTotalHariKerja] = useState(false);
+  const [errorTotalHariKerja, setErrorTotalHariKerja] = useState<string | null>(null);
+
   function muat() {
     if (!id) return;
     setLoading(true);
     api
       .laporanYayasanDetail(Number(id))
-      .then(setData)
+      .then((r) => {
+        setData(r);
+        setTotalHariKerja(r.laporan.total_hari_kerja == null ? "" : String(r.laporan.total_hari_kerja));
+      })
       .catch((e) => setErrorMsg(e instanceof Error ? e.message : "Gagal memuat laporan."))
       .finally(() => setLoading(false));
   }
 
   useEffect(muat, [id]);
+
+  async function simpanTotalHariKerja(e: FormEvent) {
+    e.preventDefault();
+    if (!id) return;
+    setMenyimpanTotalHariKerja(true);
+    setErrorTotalHariKerja(null);
+    try {
+      await api.laporanYayasanUpdateHeader(Number(id), "total_hari_kerja", totalHariKerja === "" ? null : Number(totalHariKerja));
+      muat();
+    } catch (err) {
+      setErrorTotalHariKerja(err instanceof Error ? err.message : "Gagal menyimpan.");
+    } finally {
+      setMenyimpanTotalHariKerja(false);
+    }
+  }
 
   function mulaiKoreksi(b: LaporanYayasanBaris) {
     setEditBarisId(b.id);
@@ -215,6 +236,27 @@ export default function LaporanYayasanDetailPage() {
           File sumber dari Rekap Bulanan: <span className="mono">{laporan.sumber_file}</span>
         </p>
       )}
+
+      <form className="kartu formulir-edit" onSubmit={simpanTotalHariKerja}>
+        <label>
+          Total Hari Kerja Kependidikan
+          <input
+            type="number"
+            min={0}
+            value={totalHariKerja}
+            onChange={(e) => setTotalHariKerja(e.target.value)}
+            placeholder="mis. 21"
+          />
+        </label>
+        <p className="teks-muted kecil lebar-penuh">
+          Dipakai sebagai patokan hari kerja penuh sebulan -- kalau Total Kerja seorang Guru sama dengan angka ini,
+          Insentif Rp 375.000 terisi otomatis.
+        </p>
+        {errorTotalHariKerja && <p className="pesan-error lebar-penuh">{errorTotalHariKerja}</p>}
+        <button type="submit" className="tombol tombol-primer" disabled={menyimpanTotalHariKerja}>
+          {menyimpanTotalHariKerja ? "Menyimpan..." : "Simpan"}
+        </button>
+      </form>
 
       <div className="bilah-filter">
         <a className="tombol tombol-primer" href={api.laporanYayasanExportUrl(laporan.id)}>
