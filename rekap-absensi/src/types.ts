@@ -55,6 +55,7 @@ export interface DetailHarianRow {
   lembur_menit: number;
   ket_abs_raw: string | null;
   ket_abs_kategori: string | null;
+  koreksi_alasan: string | null;
 }
 
 export interface AuditRow {

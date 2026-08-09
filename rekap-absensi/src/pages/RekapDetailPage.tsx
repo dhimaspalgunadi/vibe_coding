@@ -175,7 +175,10 @@ export default function RekapDetailPage() {
                   <td className="mono">{formatJam(h.telat_menit)}</td>
                   <td className="mono">{formatJam(h.plg_cepat_menit)}</td>
                   <td className="mono">{formatJam(h.lembur_menit)}</td>
-                  <td>{h.ket_abs_raw ? <span title={h.ket_abs_kategori ?? undefined}>{h.ket_abs_raw}</span> : ""}</td>
+                  <td>
+                    {h.ket_abs_raw && <div title={h.ket_abs_kategori ?? undefined}>{h.ket_abs_raw}</div>}
+                    {h.koreksi_alasan && <div className="teks-muted kecil">Dikoreksi: {h.koreksi_alasan}</div>}
+                  </td>
                   <td>
                     {editHarianId === h.id ? (
                       <button type="button" className="tombol" onClick={batalKoreksi}>

@@ -83,7 +83,8 @@ export default amankan(async (req: Request) => {
       telat_menit = ${hitung.telat},
       plg_cepat_menit = ${hitung.plgCepat},
       lembur_menit = ${hitung.lembur},
-      total_jam_menit = ${hitung.totalJam}
+      total_jam_menit = ${hitung.totalJam},
+      koreksi_alasan = ${alasan}
     WHERE id = ${id}
   `;
 
