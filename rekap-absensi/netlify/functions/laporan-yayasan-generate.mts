@@ -21,6 +21,7 @@ interface RekapBaseRow {
   tanggal_masuk: string | null;
   cabang: string;
   jenjang: string;
+  nama_file_asal: string;
   total_hari: number;
   total_telat_menit: number;
   total_plg_cepat_menit: number;
@@ -95,17 +96,26 @@ export default amankan(async (req: Request) => {
   `) as { id: number }[];
   const laporanId = headerRows[0].id;
 
+  // Cabang/jenjang diambil dari unit_kerja milik periode_upload (file) itu
+  // sendiri, BUKAN dari pegawai.unit_kerja_id -- pegawai.unit_kerja_id bisa
+  // "bergeser" ke unit terbaru tiap kali NIP itu muncul lagi di unggahan
+  // lain, sehingga rekap_bulanan lama bisa salah atribusi kampus kalau
+  // dijoin lewat pegawai. Menjoin lewat periode_upload memastikan Kampus/
+  // Cabang dan nama file yang tercatat benar-benar yang jadi dasar baris ini.
   const dasar = (await database.sql`
     SELECT r.id AS rekap_id, p.id AS pegawai_id, p.nip, p.nama, p.jabatan, p.agama,
-           p.tanggal_masuk, uk.cabang, uk.jenjang,
+           p.tanggal_masuk, uk.cabang, uk.jenjang, pu.nama_file_asal,
            r.total_hari, r.total_telat_menit, r.total_plg_cepat_menit, r.total_lembur_menit
     FROM rekap_bulanan r
     JOIN pegawai p ON p.id = r.pegawai_id
-    JOIN unit_kerja uk ON uk.id = p.unit_kerja_id
     JOIN periode_upload pu ON pu.id = r.periode_id
+    JOIN unit_kerja uk ON uk.id = pu.unit_kerja_id
     WHERE pu.tgl_mulai = ${tglMulai} AND pu.tgl_selesai = ${tglSelesai} AND uk.cabang = ${cabang}
     ORDER BY uk.jenjang, p.nama
   `) as RekapBaseRow[];
+
+  const sumberFile = [...new Set(dasar.map((r) => r.nama_file_asal))].sort().join(", ");
+  await database.sql`UPDATE laporan_yayasan SET sumber_file = ${sumberFile || null} WHERE id = ${laporanId}`;
 
   const sudahAda = (await database.sql`
     SELECT pegawai_id FROM laporan_yayasan_baris WHERE laporan_id = ${laporanId} AND pegawai_id IS NOT NULL
@@ -120,9 +130,8 @@ export default amankan(async (req: Request) => {
              kk.kategori
       FROM detail_harian dh
       JOIN rekap_bulanan r ON r.id = dh.rekap_id
-      JOIN pegawai p ON p.id = r.pegawai_id
-      JOIN unit_kerja uk ON uk.id = p.unit_kerja_id
       JOIN periode_upload pu ON pu.id = r.periode_id
+      JOIN unit_kerja uk ON uk.id = pu.unit_kerja_id
       LEFT JOIN ket_abs_kategori kk ON kk.id = dh.ket_abs_kategori_id
       WHERE pu.tgl_mulai = ${tglMulai} AND pu.tgl_selesai = ${tglSelesai} AND uk.cabang = ${cabang}
     `) as DetailRow[];

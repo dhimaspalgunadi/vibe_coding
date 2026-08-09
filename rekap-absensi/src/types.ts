@@ -132,6 +132,7 @@ export interface LaporanYayasanRingkas {
   cabang: string;
   tgl_mulai: string;
   tgl_selesai: string;
+  sumber_file: string | null;
   jumlah_baris: number;
   diperbarui_pada: string;
 }
@@ -144,6 +145,7 @@ export interface LaporanYayasanHeader {
   tgl_selesai: string;
   keterangan_periode: string | null;
   total_hari_kerja: number | null;
+  sumber_file: string | null;
   mengetahui_nama: string | null;
   mengetahui_jabatan: string | null;
   dibuat_oleh_nama: string | null;

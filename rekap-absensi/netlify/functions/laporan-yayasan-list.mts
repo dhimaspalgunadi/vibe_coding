@@ -8,7 +8,7 @@ export default amankan(async (req: Request) => {
   if ("error" in sesi) return sesi.error;
 
   const rows = await db().sql`
-    SELECT ly.id, ly.judul, ly.cabang, ly.tgl_mulai, ly.tgl_selesai, ly.diperbarui_pada,
+    SELECT ly.id, ly.judul, ly.cabang, ly.tgl_mulai, ly.tgl_selesai, ly.sumber_file, ly.diperbarui_pada,
            COUNT(lyb.id)::int AS jumlah_baris
     FROM laporan_yayasan ly
     LEFT JOIN laporan_yayasan_baris lyb ON lyb.laporan_id = ly.id

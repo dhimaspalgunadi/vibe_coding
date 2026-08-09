@@ -207,6 +207,11 @@ export default function LaporanYayasanDetailPage() {
         Periode {tglSaja(laporan.tgl_mulai)} s/d {tglSaja(laporan.tgl_selesai)}
       </p>
       {laporan.keterangan_periode && <p className="teks-muted">{laporan.keterangan_periode}</p>}
+      {laporan.sumber_file && (
+        <p className="teks-muted kecil">
+          File sumber dari Rekap Bulanan: <span className="mono">{laporan.sumber_file}</span>
+        </p>
+      )}
 
       <div className="bilah-filter">
         <a className="tombol tombol-primer" href={api.laporanYayasanExportUrl(laporan.id)}>
