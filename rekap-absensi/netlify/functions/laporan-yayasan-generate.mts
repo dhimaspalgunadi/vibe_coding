@@ -2,6 +2,7 @@ import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
 import { amankan, json } from "./lib/respond.js";
+import { sinkronkanInsentifGuru } from "./lib/insentif.js";
 
 // Kategori Ket.Abs (lihat seed di migrasi 0001) dipetakan ke kolom-kolom
 // "Attendance Leave" pada format Perfect Attendance. Pola lain yang tidak
@@ -206,6 +207,8 @@ export default amankan(async (req: Request) => {
       `;
     }
   }
+
+  await sinkronkanInsentifGuru(database, laporanId);
 
   const laporanRows = await database.sql`SELECT * FROM laporan_yayasan WHERE id = ${laporanId}`;
   const barisRows = await database.sql`
