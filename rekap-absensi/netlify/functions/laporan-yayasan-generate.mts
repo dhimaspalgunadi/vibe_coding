@@ -127,6 +127,23 @@ export default amankan(async (req: Request) => {
     ORDER BY p.nama
   `) as RekapBaseRow[];
 
+  // Baris yang sudah ada sebelumnya (dibuat sebelum Agama/Tanggal Masuk/
+  // Jabatan diisi lewat menu Data Pegawai, mis.) tidak pernah otomatis
+  // dapat nilai barunya karena hanya baris BARU yang di-insert dengan
+  // salinan data pegawai. Disamakan di sini setiap kali disinkronkan --
+  // tapi hanya untuk kolom yang masih NULL (belum pernah diisi), supaya
+  // koreksi manual Admin (termasuk yang sengaja dikosongkan) tidak ketimpa.
+  await database.sql`
+    UPDATE laporan_yayasan_baris lyb
+    SET agama = COALESCE(lyb.agama, p.agama),
+        tanggal_masuk = COALESCE(lyb.tanggal_masuk, p.tanggal_masuk),
+        jabatan = COALESCE(lyb.jabatan, p.jabatan)
+    FROM pegawai p
+    WHERE lyb.laporan_id = ${laporanId}
+      AND lyb.pegawai_id = p.id
+      AND (lyb.agama IS NULL OR lyb.tanggal_masuk IS NULL OR lyb.jabatan IS NULL)
+  `;
+
   const sudahAda = (await database.sql`
     SELECT pegawai_id FROM laporan_yayasan_baris WHERE laporan_id = ${laporanId} AND pegawai_id IS NOT NULL
   `) as { pegawai_id: number }[];
