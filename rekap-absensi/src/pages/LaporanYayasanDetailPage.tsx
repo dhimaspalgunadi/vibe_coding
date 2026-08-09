@@ -8,6 +8,13 @@ function formatRupiah(n: number): string {
   return new Intl.NumberFormat("id-ID").format(n);
 }
 
+// Kolom DATE dari API kadang berupa timestamp ISO penuh (mis.
+// "2026-05-16T00:00:00.000Z") -- dipotong ke "yyyy-mm-dd" untuk tampilan
+// dan supaya <input type="date"> menerimanya.
+function tglSaja(s: string): string {
+  return s.slice(0, 10);
+}
+
 const FIELD_ANGKA: (keyof LaporanYayasanBaris)[] = [
   "kupon_periode1",
   "kupon_periode2",
@@ -89,10 +96,11 @@ export default function LaporanYayasanDetailPage() {
   function mulaiKoreksi(b: LaporanYayasanBaris) {
     setEditBarisId(b.id);
     const nilai: Record<string, string> = {};
-    for (const f of [...FIELD_ANGKA, ...FIELD_TEKS, "tanggal_masuk" as const]) {
+    for (const f of [...FIELD_ANGKA, ...FIELD_TEKS]) {
       const v = b[f];
       nilai[f] = v === null || v === undefined ? "" : String(v);
     }
+    nilai.tanggal_masuk = b.tanggal_masuk ? tglSaja(b.tanggal_masuk) : "";
     setEditNilai(nilai);
     setEditAlasan("");
     setErrorBaris(null);
@@ -196,7 +204,7 @@ export default function LaporanYayasanDetailPage() {
     <div>
       <h2>{laporan.judul} &middot; {laporan.cabang}</h2>
       <p className="teks-muted mono">
-        Periode {laporan.tgl_mulai} s/d {laporan.tgl_selesai}
+        Periode {tglSaja(laporan.tgl_mulai)} s/d {tglSaja(laporan.tgl_selesai)}
       </p>
       {laporan.keterangan_periode && <p className="teks-muted">{laporan.keterangan_periode}</p>}
 
@@ -289,7 +297,7 @@ export default function LaporanYayasanDetailPage() {
                   <td className="mono">{b.plg_cepat_menit || "-"}</td>
                   <td className="mono">{formatRupiah(b.insentif)}</td>
                   <td>{b.agama ?? "-"}</td>
-                  <td className="mono">{b.tanggal_masuk ?? "-"}</td>
+                  <td className="mono">{b.tanggal_masuk ? tglSaja(b.tanggal_masuk) : "-"}</td>
                   <td>
                     <button type="button" className="tombol" onClick={() => (editBarisId === b.id ? setEditBarisId(null) : mulaiKoreksi(b))}>
                       {editBarisId === b.id ? "Batal" : "Koreksi"}

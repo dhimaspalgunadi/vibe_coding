@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { LaporanYayasanRingkas, Periode } from "../types";
 
+// Kolom DATE dari API kadang berupa timestamp ISO penuh (mis.
+// "2026-05-16T00:00:00.000Z"), bukan "yyyy-mm-dd" polos -- dipotong di sini
+// khusus untuk tampilan, tanpa mengubah nilai yang dipakai sebagai kunci.
+function tglSaja(s: string): string {
+  return s.slice(0, 10);
+}
+
 export default function LaporanYayasanListPage() {
   const navigate = useNavigate();
   const [laporan, setLaporan] = useState<LaporanYayasanRingkas[]>([]);
@@ -82,7 +89,7 @@ export default function LaporanYayasanListPage() {
             {opsiPeriode.length === 0 && <option value="">Belum ada data unggahan</option>}
             {opsiPeriode.map(([key, p]) => (
               <option value={key} key={key}>
-                {p.tgl_mulai} s/d {p.tgl_selesai}
+                {tglSaja(p.tgl_mulai)} s/d {tglSaja(p.tgl_selesai)}
               </option>
             ))}
           </select>
@@ -121,7 +128,7 @@ export default function LaporanYayasanListPage() {
               <tr key={l.id}>
                 <td>{l.cabang}</td>
                 <td className="mono">
-                  {l.tgl_mulai} s/d {l.tgl_selesai}
+                  {tglSaja(l.tgl_mulai)} s/d {tglSaja(l.tgl_selesai)}
                 </td>
                 <td>{l.jumlah_baris}</td>
                 <td className="teks-muted kecil">{new Date(l.diperbarui_pada).toLocaleString("id-ID")}</td>

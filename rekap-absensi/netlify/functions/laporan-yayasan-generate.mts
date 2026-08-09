@@ -29,12 +29,21 @@ interface RekapBaseRow {
 
 interface DetailRow {
   rekap_id: number;
-  tanggal: string;
+  tanggal: string | Date;
   libur: boolean;
   masuk_aktual: string | null;
   telat_menit: number;
   plg_cepat_menit: number;
   kategori: string | null;
+}
+
+// Kolom DATE dikembalikan driver sebagai objek Date (bukan string "yyyy-mm-dd"),
+// sedangkan tglMulai/tglSelesai dari body request selalu string JSON (bisa
+// berupa "yyyy-mm-dd" polos atau timestamp ISO penuh) -- disamakan di sini
+// supaya perbandingan/pemotongan "yyyy-mm" konsisten untuk keduanya.
+function keTanggalIso(v: string | Date): string {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return v.slice(0, 10);
 }
 
 interface Agregat {
@@ -67,9 +76,11 @@ export default amankan(async (req: Request) => {
   if ("error" in sesi) return sesi.error;
 
   const body = await req.json().catch(() => null);
-  const tglMulai = typeof body?.tglMulai === "string" ? body.tglMulai : "";
-  const tglSelesai = typeof body?.tglSelesai === "string" ? body.tglSelesai : "";
+  const tglMulaiRaw = typeof body?.tglMulai === "string" ? body.tglMulai : "";
+  const tglSelesaiRaw = typeof body?.tglSelesai === "string" ? body.tglSelesai : "";
   const cabang = typeof body?.cabang === "string" ? body.cabang.trim() : "";
+  const tglMulai = tglMulaiRaw ? keTanggalIso(tglMulaiRaw) : "";
+  const tglSelesai = tglSelesaiRaw ? keTanggalIso(tglSelesaiRaw) : "";
   if (!tglMulai || !tglSelesai || !cabang) {
     return json({ error: "Parameter 'tglMulai', 'tglSelesai', dan 'cabang' wajib diisi." }, 400);
   }
@@ -116,7 +127,7 @@ export default amankan(async (req: Request) => {
       WHERE pu.tgl_mulai = ${tglMulai} AND pu.tgl_selesai = ${tglSelesai} AND uk.cabang = ${cabang}
     `) as DetailRow[];
 
-    const bulanAwal = tglMulai.slice(0, 7); // yyyy-mm
+    const bulanAwal = keTanggalIso(tglMulai).slice(0, 7); // yyyy-mm
 
     const agregatPerRekap = new Map<number, Agregat>();
     for (const d of detail) {
@@ -128,7 +139,7 @@ export default amankan(async (req: Request) => {
       else if (d.kategori && KATEGORI_CUTI.includes(d.kategori)) a.cutiHari += 1;
       else if (!d.libur && !d.masuk_aktual && !d.kategori) a.alpaHari += 1;
       if (d.masuk_aktual) {
-        if (d.tanggal.slice(0, 7) === bulanAwal) a.kuponPeriode1 += 1;
+        if (keTanggalIso(d.tanggal).slice(0, 7) === bulanAwal) a.kuponPeriode1 += 1;
         else a.kuponPeriode2 += 1;
       }
       agregatPerRekap.set(d.rekap_id, a);
