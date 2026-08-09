@@ -173,9 +173,9 @@ export default function LaporanYayasanDetailPage() {
   }
 
   async function sinkronkan() {
-    if (!data) return;
+    if (!data?.laporan.periode_upload_id) return;
     try {
-      const hasil = await api.laporanYayasanGenerate(data.laporan.tgl_mulai, data.laporan.tgl_selesai, data.laporan.cabang);
+      const hasil = await api.laporanYayasanGenerate(data.laporan.periode_upload_id);
       window.alert(hasil.ditambahkan > 0 ? `${hasil.ditambahkan} pegawai baru ditambahkan dari Rekap Bulanan.` : "Tidak ada pegawai baru di Rekap Bulanan.");
       muat();
     } catch (err) {
@@ -202,7 +202,10 @@ export default function LaporanYayasanDetailPage() {
 
   return (
     <div>
-      <h2>{laporan.judul} &middot; {laporan.cabang}</h2>
+      <h2>
+        {laporan.judul} &middot; {laporan.cabang}
+        {laporan.jenjang && <> / {laporan.jenjang}</>}
+      </h2>
       <p className="teks-muted mono">
         Periode {tglSaja(laporan.tgl_mulai)} s/d {tglSaja(laporan.tgl_selesai)}
       </p>
@@ -217,7 +220,7 @@ export default function LaporanYayasanDetailPage() {
         <a className="tombol tombol-primer" href={api.laporanYayasanExportUrl(laporan.id)}>
           Unduh Excel
         </a>
-        <button type="button" className="tombol" onClick={sinkronkan}>
+        <button type="button" className="tombol" onClick={sinkronkan} disabled={!laporan.periode_upload_id}>
           Sinkronkan dari Rekap Bulanan
         </button>
         <button type="button" className="tombol" onClick={() => setTambahBuka((v) => !v)}>

@@ -130,6 +130,7 @@ export interface LaporanYayasanRingkas {
   id: number;
   judul: string;
   cabang: string;
+  jenjang: string | null;
   tgl_mulai: string;
   tgl_selesai: string;
   sumber_file: string | null;
@@ -141,6 +142,8 @@ export interface LaporanYayasanHeader {
   id: number;
   judul: string;
   cabang: string;
+  jenjang: string | null;
+  periode_upload_id: number | null;
   tgl_mulai: string;
   tgl_selesai: string;
   keterangan_periode: string | null;

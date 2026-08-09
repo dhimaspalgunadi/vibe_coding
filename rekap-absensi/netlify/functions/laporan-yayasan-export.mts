@@ -54,7 +54,7 @@ export default amankan(async (req: Request) => {
   merge(1, 1, 1, KOLOM);
   cell(1, 1, "YAYASAN PENDIDIKAN SANTO YOHANES", { font: { name: "Arial", size: 13, bold: true }, alignment: { horizontal: "center", vertical: "middle" } });
   merge(2, 1, 2, KOLOM);
-  cell(2, 1, `SAINT JOHN'S SCHOOL KAMPUS: ${laporan.cabang}`, { font: { name: "Arial", size: 11, bold: true }, alignment: { horizontal: "center", vertical: "middle" } });
+  cell(2, 1, `SAINT JOHN'S SCHOOL KAMPUS: ${laporan.cabang}${laporan.jenjang ? ` - ${laporan.jenjang}` : ""}`, { font: { name: "Arial", size: 11, bold: true }, alignment: { horizontal: "center", vertical: "middle" } });
   merge(3, 1, 3, KOLOM);
   cell(3, 1, String(laporan.judul ?? "PERFECT ATTENDANCE"), { font: { name: "Arial", size: 11, bold: true }, alignment: { horizontal: "center", vertical: "middle" } });
 
@@ -208,7 +208,7 @@ export default amankan(async (req: Request) => {
   ws.getColumn(3).width = 8;
 
   const buffer = await wb.xlsx.writeBuffer();
-  const namaFile = `laporan-yayasan-${laporan.cabang}-${laporan.tgl_mulai}.xlsx`.replace(/\s+/g, "-");
+  const namaFile = `laporan-yayasan-${laporan.cabang}-${laporan.jenjang ?? ""}-${laporan.tgl_mulai}.xlsx`.replace(/\s+/g, "-");
 
   return new Response(buffer as ArrayBuffer, {
     headers: {

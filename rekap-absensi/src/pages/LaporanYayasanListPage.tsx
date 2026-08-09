@@ -17,7 +17,7 @@ export default function LaporanYayasanListPage() {
   const [loading, setLoading] = useState(true);
 
   const [tglTerpilih, setTglTerpilih] = useState("");
-  const [cabang, setCabang] = useState("");
+  const [periodeUploadId, setPeriodeUploadId] = useState<number | null>(null);
   const [membuat, setMembuat] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -42,41 +42,34 @@ export default function LaporanYayasanListPage() {
     return [...map.entries()];
   }, [periodeList]);
 
-  const opsiCabang = useMemo(() => {
+  // Setiap unggahan (satu file = satu cabang x satu jenjang) jadi satu opsi
+  // sendiri di sini, dilabeli dengan nama filenya -- supaya Laporan Yayasan
+  // yang dibuat benar-benar terpisah per file, bukan digabung lintas jenjang.
+  const opsiFile = useMemo(() => {
     if (!tglTerpilih) return [];
     const [mulai, selesai] = tglTerpilih.split("|");
-    const set = new Set(periodeList.filter((p) => p.tgl_mulai === mulai && p.tgl_selesai === selesai).map((p) => p.cabang));
-    return [...set];
+    return periodeList
+      .filter((p) => p.tgl_mulai === mulai && p.tgl_selesai === selesai)
+      .sort((a, b) => a.cabang.localeCompare(b.cabang) || a.jenjang.localeCompare(b.jenjang));
   }, [tglTerpilih, periodeList]);
 
-  // Daftar file unggahan (nama_file_asal) yang benar-benar akan jadi dasar
-  // laporan untuk kombinasi periode+kampus yang dipilih -- ditampilkan agar
-  // Admin bisa memastikan file yang dipakai sudah tepat sebelum digenerate.
-  const fileSumberTerpilih = useMemo(() => {
-    if (!tglTerpilih || !cabang) return [];
-    const [mulai, selesai] = tglTerpilih.split("|");
-    return periodeList
-      .filter((p) => p.tgl_mulai === mulai && p.tgl_selesai === selesai && p.cabang === cabang)
-      .map((p) => ({ jenjang: p.jenjang, namaFile: p.nama_file_asal }))
-      .sort((a, b) => a.jenjang.localeCompare(b.jenjang));
-  }, [tglTerpilih, cabang, periodeList]);
+  const fileTerpilih = opsiFile.find((p) => p.id === periodeUploadId) ?? null;
 
   useEffect(() => {
     if (opsiPeriode.length > 0 && !tglTerpilih) setTglTerpilih(`${opsiPeriode[0][0]}`);
   }, [opsiPeriode, tglTerpilih]);
 
   useEffect(() => {
-    if (opsiCabang.length > 0) setCabang(opsiCabang[0]);
-    else setCabang("");
-  }, [opsiCabang]);
+    if (opsiFile.length > 0) setPeriodeUploadId(opsiFile[0].id);
+    else setPeriodeUploadId(null);
+  }, [opsiFile]);
 
   async function buatLaporan() {
-    if (!tglTerpilih || !cabang) return;
-    const [mulai, selesai] = tglTerpilih.split("|");
+    if (!periodeUploadId) return;
     setMembuat(true);
     setErrorMsg(null);
     try {
-      const hasil = await api.laporanYayasanGenerate(mulai, selesai, cabang);
+      const hasil = await api.laporanYayasanGenerate(periodeUploadId);
       navigate(`/admin/laporan-yayasan/${hasil.laporan.id}`);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Gagal membuat laporan.");
@@ -90,8 +83,8 @@ export default function LaporanYayasanListPage() {
       <h2>Laporan ke Yayasan</h2>
       <p className="teks-muted">
         Laporan format &ldquo;Perfect Attendance&rdquo; yang dikirim ke Yayasan, diringkas otomatis dari Rekap
-        Bulanan tiap unit sekolah. Setelah dibuat, semua baris bisa dikoreksi, ditambah, atau dihapus oleh Admin
-        sebelum diunduh sebagai file Excel.
+        Bulanan. Setiap laporan dipisah per file sumber (satu file unggahan = satu Kampus/Cabang x satu jenjang),
+        lalu semua baris bisa dikoreksi, ditambah, atau dihapus oleh Admin sebelum diunduh sebagai file Excel.
       </p>
 
       <div className="kartu formulir-edit">
@@ -107,29 +100,24 @@ export default function LaporanYayasanListPage() {
           </select>
         </label>
         <label>
-          Kampus / Cabang
-          <select value={cabang} onChange={(e) => setCabang(e.target.value)}>
-            {opsiCabang.length === 0 && <option value="">-</option>}
-            {opsiCabang.map((c) => (
-              <option value={c} key={c}>
-                {c}
+          File Sumber (Kampus/Cabang)
+          <select value={periodeUploadId ?? ""} onChange={(e) => setPeriodeUploadId(e.target.value ? Number(e.target.value) : null)}>
+            {opsiFile.length === 0 && <option value="">-</option>}
+            {opsiFile.map((p) => (
+              <option value={p.id} key={p.id}>
+                {p.nama_file_asal} &middot; {p.cabang} / {p.jenjang}
               </option>
             ))}
           </select>
         </label>
-        {fileSumberTerpilih.length > 0 && (
+        {fileTerpilih && (
           <p className="teks-muted kecil lebar-penuh">
-            File sumber dari Rekap Bulanan:{" "}
-            {fileSumberTerpilih.map((f, i) => (
-              <span key={`${f.jenjang}-${f.namaFile}`}>
-                {i > 0 && " · "}
-                <span className="mono">{f.namaFile}</span> ({f.jenjang})
-              </span>
-            ))}
+            Kampus: <strong>{fileTerpilih.cabang}</strong> &middot; Jenjang: <strong>{fileTerpilih.jenjang}</strong>{" "}
+            &middot; File: <span className="mono">{fileTerpilih.nama_file_asal}</span>
           </p>
         )}
         {errorMsg && <p className="pesan-error lebar-penuh">{errorMsg}</p>}
-        <button type="button" className="tombol tombol-primer" disabled={!tglTerpilih || !cabang || membuat} onClick={buatLaporan}>
+        <button type="button" className="tombol tombol-primer" disabled={!periodeUploadId || membuat} onClick={buatLaporan}>
           {membuat ? "Membuat..." : "Buat / Perbarui Laporan"}
         </button>
       </div>
@@ -140,6 +128,7 @@ export default function LaporanYayasanListPage() {
           <thead>
             <tr>
               <th>Kampus</th>
+              <th>Jenjang</th>
               <th>Periode</th>
               <th>File Sumber</th>
               <th>Jumlah Baris</th>
@@ -151,6 +140,7 @@ export default function LaporanYayasanListPage() {
             {laporan.map((l) => (
               <tr key={l.id}>
                 <td>{l.cabang}</td>
+                <td>{l.jenjang ?? "-"}</td>
                 <td className="mono">
                   {tglSaja(l.tgl_mulai)} s/d {tglSaja(l.tgl_selesai)}
                 </td>
@@ -164,7 +154,7 @@ export default function LaporanYayasanListPage() {
             ))}
             {!loading && laporan.length === 0 && (
               <tr>
-                <td colSpan={6} className="teks-muted">
+                <td colSpan={7} className="teks-muted">
                   Belum ada laporan. Buat laporan baru di atas.
                 </td>
               </tr>

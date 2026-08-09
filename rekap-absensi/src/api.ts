@@ -67,10 +67,10 @@ export const api = {
     req<PimpinanSummary>(`/api/pimpinan-summary?tglMulai=${tglMulai}&tglSelesai=${tglSelesai}`),
 
   laporanYayasanList: () => req<{ laporan: LaporanYayasanRingkas[] }>("/api/laporan-yayasan"),
-  laporanYayasanGenerate: (tglMulai: string, tglSelesai: string, cabang: string) =>
+  laporanYayasanGenerate: (periodeUploadId: number) =>
     req<LaporanYayasanGenerateResult>("/api/laporan-yayasan-generate", {
       method: "POST",
-      body: JSON.stringify({ tglMulai, tglSelesai, cabang }),
+      body: JSON.stringify({ periodeUploadId }),
     }),
   laporanYayasanDetail: (id: number) => req<LaporanYayasanDetailResult>(`/api/laporan-yayasan-detail?id=${id}`),
   laporanYayasanUpdateHeader: (id: number, field: string, nilaiBaru: string | number | null) =>

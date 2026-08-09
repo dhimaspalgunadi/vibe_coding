@@ -11,6 +11,15 @@ const KATEGORI_SAKIT = ["Sakit (dengan surat)", "Sakit (tanpa surat)", "Ijin Sak
 const KATEGORI_IZIN = ["Ijin"];
 const KATEGORI_CUTI = ["Cuti Tahunan"];
 
+interface FileRow {
+  id: number;
+  tgl_mulai: string | Date;
+  tgl_selesai: string | Date;
+  nama_file_asal: string;
+  cabang: string;
+  jenjang: string;
+}
+
 interface RekapBaseRow {
   rekap_id: number;
   pegawai_id: number;
@@ -19,9 +28,6 @@ interface RekapBaseRow {
   jabatan: string | null;
   agama: string | null;
   tanggal_masuk: string | null;
-  cabang: string;
-  jenjang: string;
-  nama_file_asal: string;
   total_hari: number;
   total_telat_menit: number;
   total_plg_cepat_menit: number;
@@ -38,10 +44,7 @@ interface DetailRow {
   kategori: string | null;
 }
 
-// Kolom DATE dikembalikan driver sebagai objek Date (bukan string "yyyy-mm-dd"),
-// sedangkan tglMulai/tglSelesai dari body request selalu string JSON (bisa
-// berupa "yyyy-mm-dd" polos atau timestamp ISO penuh) -- disamakan di sini
-// supaya perbandingan/pemotongan "yyyy-mm" konsisten untuk keduanya.
+// Kolom DATE dikembalikan driver sebagai objek Date (bukan string "yyyy-mm-dd").
 function keTanggalIso(v: string | Date): string {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   return v.slice(0, 10);
@@ -77,45 +80,52 @@ export default amankan(async (req: Request) => {
   if ("error" in sesi) return sesi.error;
 
   const body = await req.json().catch(() => null);
-  const tglMulaiRaw = typeof body?.tglMulai === "string" ? body.tglMulai : "";
-  const tglSelesaiRaw = typeof body?.tglSelesai === "string" ? body.tglSelesai : "";
-  const cabang = typeof body?.cabang === "string" ? body.cabang.trim() : "";
-  const tglMulai = tglMulaiRaw ? keTanggalIso(tglMulaiRaw) : "";
-  const tglSelesai = tglSelesaiRaw ? keTanggalIso(tglSelesaiRaw) : "";
-  if (!tglMulai || !tglSelesai || !cabang) {
-    return json({ error: "Parameter 'tglMulai', 'tglSelesai', dan 'cabang' wajib diisi." }, 400);
+  const periodeUploadId = Number(body?.periodeUploadId);
+  if (!periodeUploadId) {
+    return json({ error: "Parameter 'periodeUploadId' wajib diisi." }, 400);
   }
 
   const database = db();
 
+  // Satu Laporan Yayasan = satu file unggahan (periode_upload), bukan lagi
+  // gabungan lintas jenjang -- jadi Kampus/Cabang & jenjangnya persis sama
+  // dengan file itu, dan datanya diambil lewat rekap_bulanan.periode_id
+  // yang memang FK langsung ke file ini (bukan tebakan cabang+tanggal lagi).
+  const fileRows = (await database.sql`
+    SELECT pu.id, pu.tgl_mulai, pu.tgl_selesai, pu.nama_file_asal, uk.cabang, uk.jenjang
+    FROM periode_upload pu
+    JOIN unit_kerja uk ON uk.id = pu.unit_kerja_id
+    WHERE pu.id = ${periodeUploadId}
+  `) as FileRow[];
+  const file = fileRows[0];
+  if (!file) return json({ error: "File unggahan (periode) tidak ditemukan." }, 404);
+
+  const tglMulai = keTanggalIso(file.tgl_mulai);
+  const tglSelesai = keTanggalIso(file.tgl_selesai);
+
   const headerRows = (await database.sql`
-    INSERT INTO laporan_yayasan (cabang, tgl_mulai, tgl_selesai, dibuat_oleh)
-    VALUES (${cabang}, ${tglMulai}, ${tglSelesai}, ${sesi.user.id})
-    ON CONFLICT (tgl_mulai, tgl_selesai, cabang) DO UPDATE SET diperbarui_pada = now()
+    INSERT INTO laporan_yayasan (periode_upload_id, cabang, jenjang, tgl_mulai, tgl_selesai, sumber_file, dibuat_oleh)
+    VALUES (${periodeUploadId}, ${file.cabang}, ${file.jenjang}, ${tglMulai}, ${tglSelesai}, ${file.nama_file_asal}, ${sesi.user.id})
+    ON CONFLICT (periode_upload_id) DO UPDATE SET
+      cabang = EXCLUDED.cabang,
+      jenjang = EXCLUDED.jenjang,
+      tgl_mulai = EXCLUDED.tgl_mulai,
+      tgl_selesai = EXCLUDED.tgl_selesai,
+      sumber_file = EXCLUDED.sumber_file,
+      diperbarui_pada = now()
     RETURNING id
   `) as { id: number }[];
   const laporanId = headerRows[0].id;
 
-  // Cabang/jenjang diambil dari unit_kerja milik periode_upload (file) itu
-  // sendiri, BUKAN dari pegawai.unit_kerja_id -- pegawai.unit_kerja_id bisa
-  // "bergeser" ke unit terbaru tiap kali NIP itu muncul lagi di unggahan
-  // lain, sehingga rekap_bulanan lama bisa salah atribusi kampus kalau
-  // dijoin lewat pegawai. Menjoin lewat periode_upload memastikan Kampus/
-  // Cabang dan nama file yang tercatat benar-benar yang jadi dasar baris ini.
   const dasar = (await database.sql`
     SELECT r.id AS rekap_id, p.id AS pegawai_id, p.nip, p.nama, p.jabatan, p.agama,
-           p.tanggal_masuk, uk.cabang, uk.jenjang, pu.nama_file_asal,
+           p.tanggal_masuk,
            r.total_hari, r.total_telat_menit, r.total_plg_cepat_menit, r.total_lembur_menit
     FROM rekap_bulanan r
     JOIN pegawai p ON p.id = r.pegawai_id
-    JOIN periode_upload pu ON pu.id = r.periode_id
-    JOIN unit_kerja uk ON uk.id = pu.unit_kerja_id
-    WHERE pu.tgl_mulai = ${tglMulai} AND pu.tgl_selesai = ${tglSelesai} AND uk.cabang = ${cabang}
-    ORDER BY uk.jenjang, p.nama
+    WHERE r.periode_id = ${periodeUploadId}
+    ORDER BY p.nama
   `) as RekapBaseRow[];
-
-  const sumberFile = [...new Set(dasar.map((r) => r.nama_file_asal))].sort().join(", ");
-  await database.sql`UPDATE laporan_yayasan SET sumber_file = ${sumberFile || null} WHERE id = ${laporanId}`;
 
   const sudahAda = (await database.sql`
     SELECT pegawai_id FROM laporan_yayasan_baris WHERE laporan_id = ${laporanId} AND pegawai_id IS NOT NULL
@@ -130,13 +140,11 @@ export default amankan(async (req: Request) => {
              kk.kategori
       FROM detail_harian dh
       JOIN rekap_bulanan r ON r.id = dh.rekap_id
-      JOIN periode_upload pu ON pu.id = r.periode_id
-      JOIN unit_kerja uk ON uk.id = pu.unit_kerja_id
       LEFT JOIN ket_abs_kategori kk ON kk.id = dh.ket_abs_kategori_id
-      WHERE pu.tgl_mulai = ${tglMulai} AND pu.tgl_selesai = ${tglSelesai} AND uk.cabang = ${cabang}
+      WHERE r.periode_id = ${periodeUploadId}
     `) as DetailRow[];
 
-    const bulanAwal = keTanggalIso(tglMulai).slice(0, 7); // yyyy-mm
+    const bulanAwal = tglMulai.slice(0, 7); // yyyy-mm
 
     const agregatPerRekap = new Map<number, Agregat>();
     for (const d of detail) {
@@ -171,7 +179,7 @@ export default amankan(async (req: Request) => {
           plg_cepat_hari, plg_cepat_menit,
           agama, tanggal_masuk
         ) VALUES (
-          ${laporanId}, ${r.pegawai_id}, ${urutan}, ${r.nip}, ${r.jenjang}, ${r.nama}, ${r.jabatan},
+          ${laporanId}, ${r.pegawai_id}, ${urutan}, ${r.nip}, ${file.jenjang}, ${r.nama}, ${r.jabatan},
           ${a.kuponPeriode1}, ${a.kuponPeriode2}, ${r.total_hari},
           ${a.sakitHari}, ${a.izinHari}, ${a.alpaHari}, ${a.cutiHari},
           ${r.total_lembur_menit}, ${a.telatHari}, ${r.total_telat_menit},
