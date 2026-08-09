@@ -249,8 +249,8 @@ export default function LaporanYayasanDetailPage() {
           />
         </label>
         <p className="teks-muted kecil lebar-penuh">
-          Dipakai sebagai patokan hari kerja penuh sebulan -- kalau Total Kerja seorang Guru sama dengan angka ini,
-          Insentif Rp 375.000 terisi otomatis.
+          Dipakai sebagai patokan hari kerja penuh sebulan. Insentif Rp 375.000 terisi otomatis (untuk Guru maupun
+          Staf) kalau Total Kerja &ge; angka ini DAN Total Telat &lt; 15 menit dalam periode ini.
         </p>
         {errorTotalHariKerja && <p className="pesan-error lebar-penuh">{errorTotalHariKerja}</p>}
         <button type="submit" className="tombol tombol-primer" disabled={menyimpanTotalHariKerja}>

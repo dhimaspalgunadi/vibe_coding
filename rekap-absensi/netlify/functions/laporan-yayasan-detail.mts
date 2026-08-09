@@ -2,7 +2,7 @@ import type { Config } from "@netlify/functions";
 import { db } from "./lib/db.js";
 import { wajibLogin } from "./lib/auth.js";
 import { amankan, json } from "./lib/respond.js";
-import { sinkronkanInsentifGuru } from "./lib/insentif.js";
+import { sinkronkanInsentifKehadiran } from "./lib/insentif.js";
 
 const FIELD_HEADER_DIIZINKAN = new Set([
   "judul",
@@ -30,10 +30,10 @@ export default amankan(async (req: Request) => {
     if (!laporan) return json({ error: "Laporan tidak ditemukan." }, 404);
 
     // Disinkronkan ulang tiap kali laporan dibuka, bukan cuma saat Simpan/
-    // Sinkronkan diklik -- supaya insentif otomatis Guru selalu mengikuti
-    // Total Hari Kerja & Total Kerja terkini tanpa Admin perlu menebak-nebak
+    // Sinkronkan diklik -- supaya insentif otomatis selalu mengikuti Total
+    // Hari Kerja & Total Kerja/Telat terkini tanpa Admin perlu menebak-nebak
     // urutan tombol mana yang harus diklik dulu.
-    await sinkronkanInsentifGuru(database, id);
+    await sinkronkanInsentifKehadiran(database, id);
 
     const baris = await database.sql`
       SELECT * FROM laporan_yayasan_baris WHERE laporan_id = ${id} ORDER BY urutan, nama
@@ -73,9 +73,9 @@ export default amankan(async (req: Request) => {
       case "total_hari_kerja":
         hasil = await database2.sql`UPDATE laporan_yayasan SET total_hari_kerja = ${nilaiBaru === null || nilaiBaru === "" ? null : Number(nilaiBaru)}, diperbarui_pada = now() WHERE id = ${id} RETURNING *`;
         // Total Hari Kerja berubah -> patokan "hadir penuh" untuk insentif
-        // guru ikut berubah, jadi disinkronkan ulang di sini juga (bukan
-        // cuma saat generate/sinkron rekap), supaya langsung terlihat.
-        await sinkronkanInsentifGuru(database2, id);
+        // ikut berubah, jadi disinkronkan ulang di sini juga (bukan cuma
+        // saat generate/sinkron rekap), supaya langsung terlihat.
+        await sinkronkanInsentifKehadiran(database2, id);
         break;
       case "mengetahui_nama":
         hasil = await database2.sql`UPDATE laporan_yayasan SET mengetahui_nama = ${String(nilaiBaru ?? "")}, diperbarui_pada = now() WHERE id = ${id} RETURNING *`;
