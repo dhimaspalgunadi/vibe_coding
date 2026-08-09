@@ -210,10 +210,17 @@ a {
   font-weight: 600;
 }
 
+/* Sebelumnya dibatasi max-width: 1100px, tapi itu membuat tabel lebar
+   (mis. Laporan Yayasan, ~20 kolom) terjepit jadi kotak scroll horizontal
+   internal yang gampang tidak disadari -- terlihat seperti tabel
+   "berhenti" begitu saja padahal masih ada kolom (Insentif, dst) di
+   sisinya. Halaman dengan konten teks (form, dsb.) sudah punya batas
+   lebarnya sendiri (lihat .formulir-unggah/.formulir-edit), jadi aman
+   dilepas di sini supaya tabel lebar bisa pakai ruang layar penuh.
+*/
 .konten-admin, .konten-pimpinan {
   flex: 1;
   padding: 1.5rem;
-  max-width: 1100px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
