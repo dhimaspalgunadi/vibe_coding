@@ -20,6 +20,7 @@ export default function LaporanYayasanListPage() {
   const [periodeUploadId, setPeriodeUploadId] = useState<number | null>(null);
   const [membuat, setMembuat] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [menghapusId, setMenghapusId] = useState<number | null>(null);
 
   function muat() {
     setLoading(true);
@@ -75,6 +76,20 @@ export default function LaporanYayasanListPage() {
       setErrorMsg(err instanceof Error ? err.message : "Gagal membuat laporan.");
     } finally {
       setMembuat(false);
+    }
+  }
+
+  async function hapusLaporan(l: LaporanYayasanRingkas) {
+    const label = `${l.cabang}${l.jenjang ? ` / ${l.jenjang}` : ""} (${tglSaja(l.tgl_mulai)} s/d ${tglSaja(l.tgl_selesai)})`;
+    if (!window.confirm(`Hapus Laporan Yayasan "${label}" beserta semua barisnya? Tindakan ini tidak bisa dibatalkan.`)) return;
+    setMenghapusId(l.id);
+    try {
+      await api.laporanYayasanHapus(l.id);
+      setLaporan((rows) => rows.filter((r) => r.id !== l.id));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Gagal menghapus laporan.");
+    } finally {
+      setMenghapusId(null);
     }
   }
 
@@ -148,7 +163,15 @@ export default function LaporanYayasanListPage() {
                 <td>{l.jumlah_baris}</td>
                 <td className="teks-muted kecil">{new Date(l.diperbarui_pada).toLocaleString("id-ID")}</td>
                 <td>
-                  <Link to={`/admin/laporan-yayasan/${l.id}`}>Buka</Link>
+                  <Link to={`/admin/laporan-yayasan/${l.id}`}>Buka</Link>{" "}
+                  <button
+                    type="button"
+                    className="tombol"
+                    disabled={menghapusId === l.id}
+                    onClick={() => hapusLaporan(l)}
+                  >
+                    {menghapusId === l.id ? "Menghapus..." : "Hapus"}
+                  </button>
                 </td>
               </tr>
             ))}
