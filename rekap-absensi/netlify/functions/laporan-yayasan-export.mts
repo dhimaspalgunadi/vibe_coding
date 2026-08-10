@@ -20,7 +20,7 @@ function fmtJam(menit: number): string {
 }
 
 export default amankan(async (req: Request) => {
-  const sesi = wajibLogin(req, ["admin"]);
+  const sesi = wajibLogin(req, ["admin", "pimpinan"]);
   if ("error" in sesi) return sesi.error;
 
   const url = new URL(req.url);

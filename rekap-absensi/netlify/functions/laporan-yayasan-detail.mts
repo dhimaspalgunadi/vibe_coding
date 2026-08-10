@@ -15,8 +15,11 @@ const FIELD_HEADER_DIIZINKAN = new Set([
 ]);
 
 export default amankan(async (req: Request) => {
-  const sesi = wajibLogin(req, ["admin"]);
+  const sesi = wajibLogin(req, ["admin", "pimpinan"]);
   if ("error" in sesi) return sesi.error;
+  if (req.method !== "GET" && sesi.user.peran !== "admin") {
+    return json({ error: "Akun ini tidak berwenang mengubah data ini." }, 403);
+  }
 
   const url = new URL(req.url);
   const id = parseInt(url.searchParams.get("id") ?? "", 10);

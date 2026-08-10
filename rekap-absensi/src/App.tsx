@@ -9,6 +9,7 @@ import RekapListPage from "./pages/RekapListPage";
 import RekapDetailPage from "./pages/RekapDetailPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import PimpinanPage from "./pages/PimpinanPage";
+import PimpinanLaporanDetailPage from "./pages/PimpinanLaporanDetailPage";
 import LaporanYayasanListPage from "./pages/LaporanYayasanListPage";
 import LaporanYayasanDetailPage from "./pages/LaporanYayasanDetailPage";
 import PegawaiPage from "./pages/PegawaiPage";
@@ -59,6 +60,14 @@ export default function App() {
             element={
               <Gerbang peranDiizinkan={["admin", "pimpinan"]}>
                 <PimpinanPage />
+              </Gerbang>
+            }
+          />
+          <Route
+            path="/pimpinan/laporan-yayasan/:id"
+            element={
+              <Gerbang peranDiizinkan={["admin", "pimpinan"]}>
+                <PimpinanLaporanDetailPage />
               </Gerbang>
             }
           />

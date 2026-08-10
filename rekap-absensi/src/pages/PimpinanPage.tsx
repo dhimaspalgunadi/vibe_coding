@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../AuthContext";
-import type { PeriodeRingkasan, PimpinanSummary } from "../types";
+import type { LaporanYayasanRingkas, PeriodeRingkasan, PimpinanSummary } from "../types";
 
 function formatJam(menit: number): string {
   const jam = Math.floor(menit / 60);
@@ -10,11 +10,18 @@ function formatJam(menit: number): string {
   return `${jam}j ${sisa}m`;
 }
 
+// Kolom DATE dari API kadang berupa timestamp ISO penuh, dipotong ke
+// "yyyy-mm-dd" supaya bisa dicocokkan dengan aman terhadap tglMulai/tglSelesai.
+function tglSaja(s: string): string {
+  return s.slice(0, 10);
+}
+
 export default function PimpinanPage() {
   const { sesi, logout } = useAuth();
   const [periodeList, setPeriodeList] = useState<PeriodeRingkasan[]>([]);
   const [terpilih, setTerpilih] = useState<string>("");
   const [ringkasan, setRingkasan] = useState<PimpinanSummary | null>(null);
+  const [laporanList, setLaporanList] = useState<LaporanYayasanRingkas[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -28,14 +35,31 @@ export default function PimpinanPage() {
     if (!terpilih) return;
     const [tglMulai, tglSelesai] = terpilih.split("|");
     setLoading(true);
-    api
-      .pimpinanSummary(tglMulai, tglSelesai)
-      .then(setRingkasan)
+    Promise.all([api.pimpinanSummary(tglMulai, tglSelesai), api.laporanYayasanList()])
+      .then(([s, l]) => {
+        setRingkasan(s);
+        setLaporanList(l.laporan);
+      })
       .finally(() => setLoading(false));
   }, [terpilih]);
 
   const perCabang = ringkasan?.perCabang ?? [];
   const maxTelat = Math.max(1, ...perCabang.map((c) => c.rata_telat_menit));
+
+  // Peta cabang|jenjang -> id Laporan ke Yayasan yang sudah dibuat Admin
+  // untuk periode yang sedang dipilih, dipakai supaya Pimpinan bisa langsung
+  // membuka detail per unit sekolah yang sama seperti dilihat Admin.
+  const petaLaporan = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!terpilih) return map;
+    const [mulai, selesai] = terpilih.split("|");
+    for (const l of laporanList) {
+      if (tglSaja(l.tgl_mulai) === mulai && tglSaja(l.tgl_selesai) === selesai) {
+        map.set(`${l.cabang}|${l.jenjang ?? ""}`, l.id);
+      }
+    }
+    return map;
+  }, [terpilih, laporanList]);
 
   return (
     <div className="tata-letak-pimpinan">
@@ -110,21 +134,32 @@ export default function PimpinanPage() {
                 <th>Pegawai</th>
                 <th>Rata-rata Telat</th>
                 <th>Total Lembur</th>
+                <th>Laporan ke Yayasan</th>
               </tr>
             </thead>
             <tbody>
-              {(ringkasan?.perUnit ?? []).map((u) => (
-                <tr key={`${u.cabang}-${u.jenjang}`}>
-                  <td>{u.cabang}</td>
-                  <td>{u.jenjang}</td>
-                  <td>{u.jumlah_pegawai}</td>
-                  <td className="mono">{formatJam(u.rata_telat_menit)}</td>
-                  <td className="mono">{formatJam(u.total_lembur_menit)}</td>
-                </tr>
-              ))}
+              {(ringkasan?.perUnit ?? []).map((u) => {
+                const laporanId = petaLaporan.get(`${u.cabang}|${u.jenjang}`);
+                return (
+                  <tr key={`${u.cabang}-${u.jenjang}`}>
+                    <td>{u.cabang}</td>
+                    <td>{u.jenjang}</td>
+                    <td>{u.jumlah_pegawai}</td>
+                    <td className="mono">{formatJam(u.rata_telat_menit)}</td>
+                    <td className="mono">{formatJam(u.total_lembur_menit)}</td>
+                    <td>
+                      {laporanId ? (
+                        <Link to={`/pimpinan/laporan-yayasan/${laporanId}`}>Lihat Detail</Link>
+                      ) : (
+                        <span className="teks-muted kecil">Belum dibuat</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {(!ringkasan || ringkasan.perUnit.length === 0) && !loading && (
                 <tr>
-                  <td colSpan={5} className="teks-muted">
+                  <td colSpan={6} className="teks-muted">
                     Belum ada data untuk periode ini.
                   </td>
                 </tr>

@@ -4,7 +4,7 @@ import { wajibLogin } from "./lib/auth.js";
 import { amankan, json } from "./lib/respond.js";
 
 export default amankan(async (req: Request) => {
-  const sesi = wajibLogin(req, ["admin"]);
+  const sesi = wajibLogin(req, ["admin", "pimpinan"]);
   if ("error" in sesi) return sesi.error;
 
   const rows = await db().sql`
