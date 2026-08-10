@@ -11,6 +11,18 @@ function formatJam(menit: number): string {
   return `${tanda}${String(jam).padStart(2, "0")}:${String(sisa).padStart(2, "0")}`;
 }
 
+const PILIHAN_ALASAN_KOREKSI = [
+  "Lupa Absensi Masuk",
+  "Lupa Absensi Pulang",
+  "Ijin Tanpa Ket. Dokter",
+  "Ijin Ket. Dokter",
+  "Cuti Tahunan",
+  "Cuti Melahirkan",
+  "Cuti Menikah",
+  "Dinas Kantor",
+  "Alpha",
+];
+
 const FIELD_LABEL: Record<string, string> = {
   total_hari: "Total Hari",
   total_jam_menit: "Total Jam (menit)",
@@ -205,13 +217,14 @@ export default function RekapDetailPage() {
                         </label>
                         <label className="lebar-penuh">
                           Alasan koreksi (wajib)
-                          <input
-                            value={editAlasan}
-                            onChange={(e) => setEditAlasan(e.target.value)}
-                            placeholder="mis. koreksi setelah cek CCTV / konfirmasi pegawai"
-                            required
-                            autoFocus
-                          />
+                          <select value={editAlasan} onChange={(e) => setEditAlasan(e.target.value)} required autoFocus>
+                            <option value="">Pilih alasan...</option>
+                            {PILIHAN_ALASAN_KOREKSI.map((a) => (
+                              <option value={a} key={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         {errorHarian && <p className="pesan-error lebar-penuh">{errorHarian}</p>}
                         <button type="submit" className="tombol tombol-primer" disabled={menyimpanHarian}>
