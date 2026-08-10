@@ -7,6 +7,7 @@ interface AuthState {
   memuat: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  perbaruiSesi: (sesi: Sesi) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -33,7 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSesi(null);
   }
 
-  return <AuthContext.Provider value={{ sesi, memuat, login, logout }}>{children}</AuthContext.Provider>;
+  function perbaruiSesi(sesiBaru: Sesi) {
+    setSesi(sesiBaru);
+  }
+
+  return <AuthContext.Provider value={{ sesi, memuat, login, logout, perbaruiSesi }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

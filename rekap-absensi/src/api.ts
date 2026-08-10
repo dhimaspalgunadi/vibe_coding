@@ -42,6 +42,12 @@ export const api = {
     }),
   logout: () => req<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   me: () => req<Sesi>("/api/auth/me"),
+  profilUpdate: (nama: string) => req<Sesi>("/api/auth/profil", { method: "PATCH", body: JSON.stringify({ nama }) }),
+  passwordUbah: (passwordLama: string, passwordBaru: string) =>
+    req<{ ok: boolean }>("/api/auth/password", {
+      method: "PATCH",
+      body: JSON.stringify({ passwordLama, passwordBaru }),
+    }),
   unitKerja: () => req<{ unitKerja: UnitKerja[] }>("/api/unit-kerja"),
   periode: () => req<{ periode: Periode[] }>("/api/periode"),
   upload: (form: FormData) => req<UploadResult>("/api/upload", { method: "POST", body: form }),

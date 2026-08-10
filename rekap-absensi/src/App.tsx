@@ -12,6 +12,7 @@ import PimpinanPage from "./pages/PimpinanPage";
 import LaporanYayasanListPage from "./pages/LaporanYayasanListPage";
 import LaporanYayasanDetailPage from "./pages/LaporanYayasanDetailPage";
 import PegawaiPage from "./pages/PegawaiPage";
+import ProfilPage from "./pages/ProfilPage";
 
 function Gerbang({ children, peranDiizinkan }: { children: ReactElement; peranDiizinkan: Peran[] }) {
   const { sesi, memuat } = useAuth();
@@ -58,6 +59,14 @@ export default function App() {
             element={
               <Gerbang peranDiizinkan={["admin", "pimpinan"]}>
                 <PimpinanPage />
+              </Gerbang>
+            }
+          />
+          <Route
+            path="/profil"
+            element={
+              <Gerbang peranDiizinkan={["admin", "pimpinan"]}>
+                <ProfilPage />
               </Gerbang>
             }
           />

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 export default function AdminLayout() {
@@ -10,6 +10,9 @@ export default function AdminLayout() {
         <span className="judul-app">Rekap Absensi &middot; Admin</span>
         <div className="bilah-atas-kanan">
           <span className="teks-muted">{sesi?.nama}</span>
+          <Link to="/profil" className="tombol">
+            Profil
+          </Link>
           <button className="tombol" onClick={logout}>
             Keluar
           </button>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../AuthContext";
 import type { PeriodeRingkasan, PimpinanSummary } from "../types";
@@ -42,6 +43,9 @@ export default function PimpinanPage() {
         <span className="judul-app">Ringkasan Kehadiran</span>
         <div className="bilah-atas-kanan">
           <span className="teks-muted">{sesi?.nama}</span>
+          <Link to="/profil" className="tombol">
+            Profil
+          </Link>
           <button className="tombol" onClick={logout}>
             Keluar
           </button>
