@@ -52,7 +52,7 @@ export default function PimpinanPage() {
   const petaLaporan = useMemo(() => {
     const map = new Map<string, number>();
     if (!terpilih) return map;
-    const [mulai, selesai] = terpilih.split("|");
+    const [mulai, selesai] = terpilih.split("|").map(tglSaja);
     for (const l of laporanList) {
       if (tglSaja(l.tgl_mulai) === mulai && tglSaja(l.tgl_selesai) === selesai) {
         map.set(`${l.cabang}|${l.jenjang ?? ""}`, l.id);
@@ -79,7 +79,7 @@ export default function PimpinanPage() {
         <select value={terpilih} onChange={(e) => setTerpilih(e.target.value)}>
           {periodeList.map((p) => (
             <option value={`${p.tgl_mulai}|${p.tgl_selesai}`} key={`${p.tgl_mulai}-${p.tgl_selesai}`}>
-              {p.tgl_mulai} s/d {p.tgl_selesai} ({p.jumlah_unit} unit kerja)
+              {tglSaja(p.tgl_mulai)} s/d {tglSaja(p.tgl_selesai)} ({p.jumlah_unit} unit kerja)
             </option>
           ))}
         </select>
