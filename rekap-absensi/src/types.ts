@@ -212,3 +212,28 @@ export interface LaporanYayasanDetailResult {
 export interface LaporanYayasanGenerateResult extends LaporanYayasanDetailResult {
   ditambahkan: number;
 }
+
+export interface PenggunaRow {
+  id: number;
+  nama: string;
+  email: string;
+  peran: Peran;
+  status_aktif: boolean;
+  dibuat_pada: string;
+}
+
+export interface PenggunaAuditRow {
+  id: number;
+  field_diubah: string;
+  nilai_lama: string | null;
+  nilai_baru: string | null;
+  alasan: string;
+  waktu: string;
+  admin_nama: string;
+  target_nama: string | null;
+}
+
+export interface PenggunaListResult {
+  pengguna: PenggunaRow[];
+  audit: PenggunaAuditRow[];
+}

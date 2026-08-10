@@ -13,6 +13,7 @@ import PimpinanLaporanDetailPage from "./pages/PimpinanLaporanDetailPage";
 import LaporanYayasanListPage from "./pages/LaporanYayasanListPage";
 import LaporanYayasanDetailPage from "./pages/LaporanYayasanDetailPage";
 import PegawaiPage from "./pages/PegawaiPage";
+import PenggunaPage from "./pages/PenggunaPage";
 import ProfilPage from "./pages/ProfilPage";
 
 function Gerbang({ children, peranDiizinkan }: { children: ReactElement; peranDiizinkan: Peran[] }) {
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="pegawai" element={<PegawaiPage />} />
             <Route path="laporan-yayasan" element={<LaporanYayasanListPage />} />
             <Route path="laporan-yayasan/:id" element={<LaporanYayasanDetailPage />} />
+            <Route path="pengguna" element={<PenggunaPage />} />
             <Route path="log" element={<AuditLogPage />} />
           </Route>
           <Route

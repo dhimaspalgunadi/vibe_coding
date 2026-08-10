@@ -32,6 +32,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/laporan-yayasan" className={({ isActive }) => (isActive ? "aktif" : "")}>
             Laporan ke Yayasan
           </NavLink>
+          <NavLink to="/admin/pengguna" className={({ isActive }) => (isActive ? "aktif" : "")}>
+            Manajemen User
+          </NavLink>
           <NavLink to="/admin/log" className={({ isActive }) => (isActive ? "aktif" : "")}>
             Log Perubahan
           </NavLink>

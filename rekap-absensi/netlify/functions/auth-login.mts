@@ -10,6 +10,7 @@ interface BarisPengguna {
   email: string;
   password_hash: string;
   peran: Peran;
+  status_aktif: boolean;
 }
 
 export default amankan(async (req: Request) => {
@@ -21,10 +22,11 @@ export default amankan(async (req: Request) => {
   if (!email || !password) return json({ error: "Email dan password wajib diisi." }, 400);
 
   const rows = (await db().sql`
-    SELECT id, nama, email, password_hash, peran FROM pengguna WHERE lower(email) = ${email}
+    SELECT id, nama, email, password_hash, peran, status_aktif FROM pengguna WHERE lower(email) = ${email}
   `) as BarisPengguna[];
   const row = rows[0];
   if (!row) return json({ error: "Email atau password salah." }, 401);
+  if (!row.status_aktif) return json({ error: "Akun ini sudah dinonaktifkan. Hubungi Admin lain." }, 401);
 
   const cocok = await cocokkanPassword(password, row.password_hash);
   if (!cocok) return json({ error: "Email atau password salah." }, 401);

@@ -7,8 +7,11 @@ import type {
   LaporanYayasanHeader,
   LaporanYayasanRingkas,
   PegawaiRow,
+  Peran,
   Periode,
   PeriodeRingkasan,
+  PenggunaListResult,
+  PenggunaRow,
   PimpinanSummary,
   RekapDetailResult,
   RekapRow,
@@ -119,6 +122,20 @@ export const api = {
     }),
   pegawaiHapus: (id: number, alasan: string) =>
     req<{ ok: boolean }>(`/api/pegawai-detail?id=${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ alasan }),
+    }),
+
+  penggunaList: () => req<PenggunaListResult>("/api/pengguna"),
+  penggunaTambah: (data: { nama: string; email: string; password: string; peran: Peran }) =>
+    req<{ pengguna: PenggunaRow }>("/api/pengguna-detail", { method: "POST", body: JSON.stringify(data) }),
+  penggunaUpdate: (id: number, perubahan: Record<string, unknown>, alasan: string) =>
+    req<{ ok: boolean; pengguna: PenggunaRow }>(`/api/pengguna-detail?id=${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ ...perubahan, alasan }),
+    }),
+  penggunaHapus: (id: number, alasan: string) =>
+    req<{ ok: boolean }>(`/api/pengguna-detail?id=${id}`, {
       method: "DELETE",
       body: JSON.stringify({ alasan }),
     }),
