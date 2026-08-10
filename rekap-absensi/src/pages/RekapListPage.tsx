@@ -61,6 +61,7 @@ export default function RekapListPage() {
               <th>Pulang Cepat</th>
               <th>Lembur</th>
               <th>Status</th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -82,11 +83,16 @@ export default function RekapListPage() {
                   {r.status_anomali === "perlu_tinjau" && <span className="chip chip-warn">perlu tinjau</span>}
                   {r.validasi_cocok && r.status_anomali === "normal" && <span className="chip chip-baik">normal</span>}
                 </td>
+                <td>
+                  <Link to={`/admin/rekap/${r.id}`} className="tombol">
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="teks-muted">
+                <td colSpan={9} className="teks-muted">
                   Tidak ada data. Unggah file dulu di menu &ldquo;Unggah File&rdquo;.
                 </td>
               </tr>
