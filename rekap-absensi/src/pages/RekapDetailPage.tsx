@@ -11,6 +11,62 @@ function formatJam(menit: number): string {
   return `${tanda}${String(jam).padStart(2, "0")}:${String(sisa).padStart(2, "0")}`;
 }
 
+const JAM_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+const MENIT_60 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+// Input <input type="time"> mengikuti format jam 12 jam (AM/PM) di sebagian
+// browser tapi menyimpan/menampilkan nilai 24 jam ("06:40", "18:01") --
+// diganti dengan 3 dropdown eksplisit (Jam/Menit/AM-PM) supaya konsisten di
+// semua browser, lalu dikonversi ke format 24 jam saat disimpan.
+function jamKeBagian(v: string): { jam12: string; menit: string; periode: "AM" | "PM" } {
+  if (!v) return { jam12: "", menit: "", periode: "AM" };
+  const [hStr, mStr] = v.split(":");
+  const h = parseInt(hStr, 10);
+  const periode: "AM" | "PM" = h >= 12 ? "PM" : "AM";
+  let jam12 = h % 12;
+  if (jam12 === 0) jam12 = 12;
+  return { jam12: String(jam12).padStart(2, "0"), menit: (mStr ?? "00").padStart(2, "0"), periode };
+}
+
+function bagianKeJam(jam12: string, menit: string, periode: "AM" | "PM"): string {
+  if (!jam12 || !menit) return "";
+  let h = parseInt(jam12, 10) % 12;
+  if (periode === "PM") h += 12;
+  return `${String(h).padStart(2, "0")}:${menit}`;
+}
+
+function PilihJam({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const b = jamKeBagian(value);
+  function ubah(jam12: string, menit: string, periode: "AM" | "PM") {
+    onChange(bagianKeJam(jam12, menit, periode));
+  }
+  return (
+    <div className="pilih-jam">
+      <select value={b.jam12} onChange={(e) => ubah(e.target.value, b.menit || "00", b.periode)}>
+        <option value="">Jam</option>
+        {JAM_12.map((j) => (
+          <option value={j} key={j}>
+            {j}
+          </option>
+        ))}
+      </select>
+      <span>:</span>
+      <select value={b.menit} onChange={(e) => ubah(b.jam12 || "12", e.target.value, b.periode)}>
+        <option value="">Menit</option>
+        {MENIT_60.map((m) => (
+          <option value={m} key={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+      <select value={b.periode} onChange={(e) => ubah(b.jam12 || "12", b.menit || "00", e.target.value as "AM" | "PM")}>
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
+  );
+}
+
 const PILIHAN_ALASAN_KOREKSI = [
   "Lupa Absensi Masuk",
   "Lupa Absensi Pulang",
@@ -209,11 +265,11 @@ export default function RekapDetailPage() {
                       <form className="baris-koreksi" onSubmit={simpanKoreksiHarian}>
                         <label>
                           Jam Masuk
-                          <input type="time" value={editMasuk} onChange={(e) => setEditMasuk(e.target.value)} />
+                          <PilihJam value={editMasuk} onChange={setEditMasuk} />
                         </label>
                         <label>
                           Jam Pulang
-                          <input type="time" value={editPulang} onChange={(e) => setEditPulang(e.target.value)} />
+                          <PilihJam value={editPulang} onChange={setEditPulang} />
                         </label>
                         <label className="lebar-penuh">
                           Alasan koreksi (wajib)

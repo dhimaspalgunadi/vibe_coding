@@ -263,6 +263,17 @@ a {
   font-size: 0.82rem;
 }
 
+.pilih-jam {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pilih-jam select {
+  flex: 1;
+  min-width: 0;
+}
+
 .baris-koreksi {
   display: grid;
   grid-template-columns: 1fr 1fr;
