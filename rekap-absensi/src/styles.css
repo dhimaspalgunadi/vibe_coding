@@ -319,6 +319,14 @@ a {
   max-width: 640px;
 }
 
+/* Kartu filter di atas tabel (mis. Periode/File Sumber di Laporan ke
+   Yayasan) sengaja tidak dibatasi 640px seperti form koreksi biasa --
+   supaya lebar putihnya sejajar dengan tabel lebar di bawahnya, bukan
+   berhenti di tengah layar dan menyisakan area kosong di kanan. */
+.formulir-lebar {
+  max-width: none;
+}
+
 .formulir-unggah label:last-of-type,
 .lebar-penuh {
   grid-column: 1 / -1;

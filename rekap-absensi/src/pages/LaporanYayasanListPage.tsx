@@ -102,7 +102,7 @@ export default function LaporanYayasanListPage() {
         lalu semua baris bisa dikoreksi, ditambah, atau dihapus oleh Admin sebelum diunduh sebagai file Excel.
       </p>
 
-      <div className="kartu formulir-edit">
+      <div className="kartu formulir-edit formulir-lebar">
         <label>
           Periode
           <select value={tglTerpilih} onChange={(e) => setTglTerpilih(e.target.value)}>
