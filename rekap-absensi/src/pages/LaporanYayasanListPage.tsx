@@ -163,7 +163,9 @@ export default function LaporanYayasanListPage() {
                 <td>{l.jumlah_baris}</td>
                 <td className="teks-muted kecil">{new Date(l.diperbarui_pada).toLocaleString("id-ID")}</td>
                 <td>
-                  <Link to={`/admin/laporan-yayasan/${l.id}`}>Buka</Link>{" "}
+                  <Link to={`/admin/laporan-yayasan/${l.id}`} className="tombol">
+                    Buka
+                  </Link>{" "}
                   <button
                     type="button"
                     className="tombol"
